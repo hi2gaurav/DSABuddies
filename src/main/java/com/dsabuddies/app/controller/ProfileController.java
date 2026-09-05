@@ -3,7 +3,6 @@ package com.dsabuddies.app.controller;
 import com.dsabuddies.app.dto.TopicProgressDto;
 import com.dsabuddies.app.dto.UserDto;
 import com.dsabuddies.app.model.User;
-import com.dsabuddies.app.repository.UserRepository;
 import com.dsabuddies.app.service.StatsService;
 import com.dsabuddies.app.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -25,17 +24,40 @@ public class ProfileController {
 
     private final UserService userService;
     private final StatsService statsService;
-    private final UserRepository userRepository;
 
     @GetMapping("/me")
     public ResponseEntity<UserDto> getMyProfile(@AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
-        return ResponseEntity.ok(userService.getUserByEmail(email));
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = userService.getOrCreateUser(principal);
+        return ResponseEntity.ok(userService.toDto(user));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getProfile(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+    public ResponseEntity<UserDto> getProfile(
+            @PathVariable Long id,
+            @AuthenticationPrincipal OAuth2User principal) {
+        UserDto userDto = userService.getUserById(id);
+        User currentUser = principal != null ? userService.getOrCreateUser(principal) : null;
+        boolean isMe = currentUser != null && currentUser.getId().equals(id);
+        boolean isAdmin = currentUser != null && "ROLE_ADMIN".equals(currentUser.getRole());
+
+        if (!isMe && !isAdmin) {
+            // Mask private email address for other community members to prevent data exposure
+            userDto = new UserDto(
+                    userDto.id(),
+                    null,
+                    userDto.name(),
+                    userDto.avatarUrl(),
+                    userDto.role(),
+                    userDto.currentStreak(),
+                    userDto.maxStreak(),
+                    userDto.totalXp(),
+                    userDto.createdAt()
+            );
+        }
+        return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/{id}/topics")

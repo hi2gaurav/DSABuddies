@@ -3,8 +3,8 @@ package com.dsabuddies.app.controller;
 import com.dsabuddies.app.dto.CreateTaskSheetRequest;
 import com.dsabuddies.app.dto.TaskSheetDto;
 import com.dsabuddies.app.model.User;
-import com.dsabuddies.app.repository.UserRepository;
 import com.dsabuddies.app.service.TaskSheetService;
+import com.dsabuddies.app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +20,7 @@ import java.util.List;
 public class TaskSheetController {
 
     private final TaskSheetService taskSheetService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<List<TaskSheetDto>> getTaskSheets(
@@ -45,7 +45,10 @@ public class TaskSheetController {
     public ResponseEntity<TaskSheetDto> createTaskSheet(
             @RequestBody CreateTaskSheetRequest request,
             @AuthenticationPrincipal OAuth2User principal) {
-        User user = userRepository.findByEmail(principal.getAttribute("email")).orElseThrow();
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = userService.getOrCreateUser(principal);
         return ResponseEntity.ok(taskSheetService.createTaskSheet(request, user));
     }
 
@@ -58,7 +61,6 @@ public class TaskSheetController {
     
     private Long getUserId(OAuth2User principal) {
         if (principal == null) return null;
-        String email = principal.getAttribute("email");
-        return userRepository.findByEmail(email).map(User::getId).orElse(null);
+        return userService.getOrCreateUser(principal).getId();
     }
 }

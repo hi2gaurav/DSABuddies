@@ -2,9 +2,8 @@ package com.dsabuddies.app.controller;
 
 import com.dsabuddies.app.dto.CreateTaskRequest;
 import com.dsabuddies.app.dto.TaskDto;
-import com.dsabuddies.app.model.User;
-import com.dsabuddies.app.repository.UserRepository;
 import com.dsabuddies.app.service.TaskService;
+import com.dsabuddies.app.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,7 +20,7 @@ import java.util.List;
 public class TaskController {
 
     private final TaskService taskService;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     @GetMapping
     public ResponseEntity<List<TaskDto>> getTasks(
@@ -54,7 +53,6 @@ public class TaskController {
     
     private Long getUserId(OAuth2User principal) {
         if (principal == null) return null;
-        String email = principal.getAttribute("email");
-        return userRepository.findByEmail(email).map(User::getId).orElse(null);
+        return userService.getOrCreateUser(principal).getId();
     }
 }

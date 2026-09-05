@@ -15,7 +15,7 @@ spring:
         format_sql: true
   h2:
     console:
-      enabled: true
+      enabled: ${H2_CONSOLE_ENABLED:false}
       path: /h2-console
   security:
     oauth2:
@@ -36,3 +36,13 @@ server:
     session:
       cookie:
         same-site: lax
+
+app:
+  cors:
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        exclude: "*"

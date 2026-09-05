@@ -2,16 +2,40 @@ import { User, DashboardData, TaskSheet, Task, TaskCompletionEntry, LeaderboardE
 
 const API_BASE = '';
 
+function getCsrfToken(): string | null {
+  const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]+)'));
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options?.headers as Record<string, string>),
+  };
+
+  const method = options?.method?.toUpperCase() || 'GET';
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+    const csrfToken = getCsrfToken();
+    if (csrfToken) {
+      headers['X-XSRF-TOKEN'] = csrfToken;
+    }
+  }
+
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    headers,
   });
+
   if (!res.ok) {
     throw new Error(`API error: ${res.status}`);
   }
-  return res.json();
+
+  const contentType = res.headers.get('content-type');
+  if (contentType && contentType.includes('application/json')) {
+    return res.json();
+  }
+  return {} as T;
 }
 
 export const api = {
