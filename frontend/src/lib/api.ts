@@ -8,11 +8,9 @@ async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
-  if (res.status === 401) {
-    window.location.href = '/oauth2/authorization/google';
-    throw new Error('Unauthorized');
+  if (!res.ok) {
+    throw new Error(`API error: ${res.status}`);
   }
-  if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
 

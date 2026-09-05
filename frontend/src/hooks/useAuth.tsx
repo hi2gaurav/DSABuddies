@@ -21,12 +21,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const checkAuth = async () => {
       try {
         const { authenticated } = await api.getAuthStatus();
-        setAuthenticated(authenticated);
         if (authenticated) {
-          const currentUser = await api.getCurrentUser();
-          setUser(currentUser);
+          setAuthenticated(true);
+          try {
+            const currentUser = await api.getCurrentUser();
+            setUser(currentUser);
+          } catch (e) {
+            console.error('Failed to fetch user details:', e);
+          }
+        } else {
+          setAuthenticated(false);
+          setUser(null);
         }
       } catch (error) {
+        console.error('Failed to check auth status:', error);
         setAuthenticated(false);
         setUser(null);
       } finally {

@@ -22,7 +22,41 @@ public class UserService {
     }
 
     public UserDto getUserByEmail(String email) {
-        return toDto(userRepository.findByEmail(email).orElseThrow());
+        return toDto(userRepository.findByEmailIgnoreCase(email.trim()).orElseThrow());
+    }
+
+    @Transactional
+    public User getOrCreateUser(org.springframework.security.oauth2.core.user.OAuth2User principal) {
+        if (principal == null) {
+            throw new IllegalArgumentException("Principal cannot be null");
+        }
+        String email = principal.getAttribute("email");
+        if (email == null) {
+            email = principal.getName();
+        }
+        String finalEmail = email.trim().toLowerCase();
+        String rawName = principal.getAttribute("name");
+        String finalName = (rawName == null || rawName.isBlank()) ? finalEmail.split("@")[0] : rawName;
+        String picture = principal.getAttribute("picture");
+
+        User user = userRepository.findByEmailIgnoreCase(finalEmail)
+                .orElseGet(() -> {
+                    long count = userRepository.count();
+                    String role = (count == 0) ? "ROLE_ADMIN" : "ROLE_USER";
+                    return User.builder()
+                            .email(finalEmail)
+                            .name(finalName)
+                            .avatarUrl(picture)
+                            .role(role)
+                            .build();
+                });
+
+        user.setName(finalName);
+        if (picture != null) {
+            user.setAvatarUrl(picture);
+        }
+        updateStreak(user);
+        return user;
     }
 
     public List<UserDto> getAllUsers() {

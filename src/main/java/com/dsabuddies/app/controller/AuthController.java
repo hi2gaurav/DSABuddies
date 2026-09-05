@@ -24,8 +24,8 @@ public class AuthController {
         if (principal == null) {
             return ResponseEntity.status(401).build();
         }
-        String email = principal.getAttribute("email");
-        return ResponseEntity.ok(userService.getUserByEmail(email));
+        com.dsabuddies.app.model.User user = userService.getOrCreateUser(principal);
+        return ResponseEntity.ok(userService.toDto(user));
     }
 
     @GetMapping("/status")

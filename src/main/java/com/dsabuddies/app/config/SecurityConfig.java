@@ -19,6 +19,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final com.dsabuddies.app.service.UserService userService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -32,6 +33,12 @@ public class SecurityConfig {
                 return config;
             }))
             .csrf(AbstractHttpConfigurer::disable)
+            .exceptionHandling(ex -> ex
+                .defaultAuthenticationEntryPointFor(
+                    new org.springframework.security.web.authentication.HttpStatusEntryPoint(org.springframework.http.HttpStatus.UNAUTHORIZED),
+                    new org.springframework.security.web.util.matcher.AntPathRequestMatcher("/api/**")
+                )
+            )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login/**", "/error", "/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico", "/h2-console/**", "/api/auth/status").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -40,10 +47,18 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth2 -> oauth2
                 .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                .defaultSuccessUrl("/dashboard", true)
+                .successHandler((request, response, authentication) -> {
+                    if (authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User oAuth2User) {
+                        userService.getOrCreateUser(oAuth2User);
+                    }
+                    response.sendRedirect("/dashboard");
+                })
             )
             .logout(logout -> logout
+                .logoutUrl("/logout")
                 .logoutSuccessUrl("/")
+                .invalidateHttpSession(true)
+                .deleteCookies("JSESSIONID")
                 .permitAll()
             )
             .headers(headers -> headers.frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)); // For H2 Console

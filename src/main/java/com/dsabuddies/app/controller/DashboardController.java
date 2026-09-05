@@ -18,12 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 public class DashboardController {
 
     private final DashboardService dashboardService;
-    private final UserRepository userRepository;
+    private final com.dsabuddies.app.service.UserService userService;
 
     @GetMapping
     public ResponseEntity<DashboardDto> getDashboard(@AuthenticationPrincipal OAuth2User principal) {
-        String email = principal.getAttribute("email");
-        User user = userRepository.findByEmail(email).orElseThrow();
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = userService.getOrCreateUser(principal);
         return ResponseEntity.ok(dashboardService.getDashboard(user));
     }
 }
