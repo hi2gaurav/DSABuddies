@@ -279,7 +279,7 @@ export const AdminDailyPrepHub: React.FC = () => {
                             <span>Copy Solution</span>
                           </button>
                         </div>
-                        <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed">
+                        <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed">
                           {q.detailedSolution || q.answer}
                         </div>
                       </div>
@@ -477,7 +477,7 @@ export const AdminDailyPrepHub: React.FC = () => {
                     <span>{copiedId === 'lc-solution' ? 'Copied!' : 'Copy Code & Solution'}</span>
                   </button>
                 </div>
-                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-mono">
+                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed font-mono">
                   {content.leetCodeProblem.detailedSolution || content.leetCodeProblem.optimalApproach}
                 </div>
               </div>
@@ -578,7 +578,7 @@ export const AdminDailyPrepHub: React.FC = () => {
                     <span>{copiedId === 'lld-solution' ? 'Copied!' : 'Copy Architecture'}</span>
                   </button>
                 </div>
-                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans">
+                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
                   {content.lldTopic.detailedSolution || content.lldTopic.architectureSummary}
                 </div>
               </div>
@@ -679,7 +679,7 @@ export const AdminDailyPrepHub: React.FC = () => {
                     <span>{copiedId === 'hld-solution' ? 'Copied!' : 'Copy Architecture'}</span>
                   </button>
                 </div>
-                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans">
+                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
                   {content.hldTopic.detailedSolution || content.hldTopic.architectureSummary}
                 </div>
               </div>

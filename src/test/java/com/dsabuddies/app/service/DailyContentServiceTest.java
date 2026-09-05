@@ -166,4 +166,50 @@ class DailyContentServiceTest {
         DailyContentDto refreshed = dailyContentService.refreshContent(today);
         assertNotNull(refreshed);
     }
+
+    @Test
+    @DisplayName("Should verify full code solutions and structured FAANG candidate walkthroughs across all banks")
+    void testFaangDetailedSolutionsAndCodeQuality() {
+        // 1. Verify all LeetCode problems have complete Java code and structured sections
+        for (DailyContentDto.LeetCodeProblem lc : DailyLeetCodeBank.getAllProblems()) {
+            assertNotNull(lc.getDetailedSolution(), "LeetCode problem " + lc.getId() + " must have detailed solution");
+            assertTrue(lc.getDetailedSolution().contains("```java"), "Must contain full Java code block in " + lc.getId());
+            assertTrue(lc.getDetailedSolution().contains("class "), "Must contain Java class definition in " + lc.getId());
+            assertTrue(lc.getDetailedSolution().contains("Google Candidate Pitch"), "Must contain Google Candidate pitch in " + lc.getId());
+            assertTrue(lc.getDetailedSolution().contains("Complexity"), "Must contain complexity analysis in " + lc.getId());
+        }
+
+        // 2. Verify all LLD topics have full Java code and trade-offs
+        for (DailyContentDto.DesignTopic lld : DailyDesignBank.getLldTopics()) {
+            assertNotNull(lld.getDetailedSolution(), "LLD topic " + lld.getId() + " must have detailed solution");
+            assertTrue(lld.getDetailedSolution().contains("```java"), "Must contain Java code block in " + lld.getId());
+            assertTrue(lld.getDetailedSolution().contains("class "), "Must define OOP classes in " + lld.getId());
+        }
+
+        // 3. Verify all HLD topics have schemas, API contracts, and calculations
+        for (DailyContentDto.DesignTopic hld : DailyDesignBank.getHldTopics()) {
+            assertNotNull(hld.getDetailedSolution(), "HLD topic " + hld.getId() + " must have detailed solution");
+            assertTrue(hld.getDetailedSolution().contains("Scale & Back-of-the-Envelope"), "Must contain scale estimation in " + hld.getId());
+            assertTrue(hld.getDetailedSolution().contains("```"), "Must contain schema/code block in " + hld.getId());
+        }
+
+        // 4. Verify all 40 questions across categories have code snippets and structured detailed solutions with code examples
+        java.util.List<java.util.List<DailyContentDto.InterviewQuestion>> questionBanks = java.util.List.of(
+            DailyInterviewQuestionsBank.getJavaQuestions(),
+            DailyInterviewQuestionsBank.getSpringBootQuestions(),
+            DailyInterviewQuestionsBank.getDatabaseQuestions(),
+            DailyInterviewQuestionsBank.getCsQuestions()
+        );
+
+        for (java.util.List<DailyContentDto.InterviewQuestion> bank : questionBanks) {
+            for (DailyContentDto.InterviewQuestion q : bank) {
+                assertNotNull(q.getCodeSnippet(), "Question: " + q.getQuestion() + " must have a codeSnippet");
+                assertFalse(q.getCodeSnippet().isBlank(), "codeSnippet must not be blank for: " + q.getQuestion());
+
+                assertNotNull(q.getDetailedSolution(), "detailedSolution must not be null for: " + q.getQuestion());
+                assertFalse(q.getDetailedSolution().isBlank(), "detailedSolution must not be blank for: " + q.getQuestion());
+                assertTrue(q.getDetailedSolution().contains("Google Candidate Pitch"), "Must have Google pitch for: " + q.getQuestion());
+            }
+        }
+    }
 }

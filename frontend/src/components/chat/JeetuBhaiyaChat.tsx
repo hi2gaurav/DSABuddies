@@ -115,10 +115,7 @@ export const JeetuBhaiyaChat: React.FC = () => {
             <ChevronDown className="w-6 h-6 stroke-[2.5]" />
           ) : (
             <div className="relative">
-              <Sparkles className="w-6 h-6 fill-slate-950 text-slate-950 animate-pulse" />
-              {/* Online pulse indicator */}
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 rounded-full ring-2 ring-white animate-ping" />
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-white" />
+              <Sparkles className="w-6 h-6 fill-slate-950 text-slate-950" />
             </div>
           )}
 
