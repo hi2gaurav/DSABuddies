@@ -44,20 +44,14 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </div>
 
         <div className="flex items-center gap-2.5 sm:gap-4">
-          {/* User Streak Badge with Flame Animation */}
+          {/* User Streak Badge */}
           {user && (
-            <motion.div 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-orange-500/5 border border-orange-500/30 text-orange-600 dark:text-orange-400 rounded-full text-xs font-black shadow-xs cursor-default backdrop-blur-xs select-none"
-              title={`Active Streak: ${user.currentStreak || 0} consecutive days`}
+            <div 
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-black shadow-xs cursor-default select-none"
             >
-              <div className="relative">
-                <Flame className="w-4 h-4 fill-orange-500 text-orange-500 animate-pulse" />
-                <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-amber-400 rounded-full animate-ping" />
-              </div>
-              <span className="tracking-tight">{user.currentStreak || 0} {user.currentStreak === 1 ? 'Day' : 'Days'}</span>
-            </motion.div>
+              <Flame className="w-4 h-4 fill-orange-500 text-orange-500" />
+              <span>{user.currentStreak || 0} {user.currentStreak === 1 ? 'Day' : 'Days'}</span>
+            </div>
           )}
 
           {/* Theme Toggle Button with Rotation Animation */}

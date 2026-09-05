@@ -12,7 +12,6 @@ import CoinRewardOverlay from '../components/common/CoinRewardOverlay';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import SolutionModal from '../components/tasks/SolutionModal';
-import WeakAreaWidget from '../components/dashboard/WeakAreaWidget';
 import BookmarkButton from '../components/common/BookmarkButton';
 import NoteModal from '../components/common/NoteModal';
 import BadgeCelebrationModal from '../components/common/BadgeCelebrationModal';
@@ -123,7 +122,7 @@ const DashboardPage: React.FC = () => {
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
             <span>Welcome back, {data.userName.split(' ')[0]}!</span>
-            <span className="text-2xl inline-block animate-bounce">👋</span>
+            <span className="text-2xl inline-block">👋</span>
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs sm:text-sm max-w-xl">
             Track your DSA challenge progress, maintain consistency, and elevate your coding skills.
@@ -369,10 +368,6 @@ const DashboardPage: React.FC = () => {
         </div>
       </section>
 
-      {/* WEAK-AREA DETECTION & ADAPTIVE SUGGESTIONS SECTION */}
-      <section>
-        <WeakAreaWidget />
-      </section>
 
       {/* Solution & Notes Modal */}
       <SolutionModal
