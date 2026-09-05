@@ -36,6 +36,16 @@ public class TaskCompletionService {
         }
         
         User user = userRepository.findById(userId).orElseThrow();
+        if ("BANNED".equalsIgnoreCase(user.getStatus())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Your account has been suspended: " + (user.getModerationReason() != null ? user.getModerationReason() : "Contact admin.")
+            );
+        }
+        if ("MUTED".equalsIgnoreCase(user.getStatus()) && user.getMutedUntil() != null && user.getMutedUntil().isAfter(LocalDateTime.now())) {
+            throw new org.springframework.security.access.AccessDeniedException(
+                    "Your account is muted until " + user.getMutedUntil() + ": " + (user.getModerationReason() != null ? user.getModerationReason() : "Action forbidden.")
+            );
+        }
         Task task = taskRepository.findById(taskId).orElseThrow();
         
         TaskCompletion completion = TaskCompletion.builder()

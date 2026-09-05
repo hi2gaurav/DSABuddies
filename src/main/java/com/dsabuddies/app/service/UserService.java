@@ -121,6 +121,35 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
+    public UserDto updateMemberStatus(Long userId, String status, Integer muteDurationHours, String reason) {
+        User user = userRepository.findById(userId).orElseThrow();
+        if (ADMIN_EMAIL.equalsIgnoreCase(user.getEmail())) {
+            throw new IllegalArgumentException("Primary admin account status cannot be modified");
+        }
+
+        String normalizedStatus = status != null ? status.trim().toUpperCase() : "ACTIVE";
+        if (!List.of("ACTIVE", "MUTED", "BANNED").contains(normalizedStatus)) {
+            throw new IllegalArgumentException("Invalid status: " + status + ". Must be ACTIVE, MUTED, or BANNED");
+        }
+
+        user.setStatus(normalizedStatus);
+        user.setModerationReason(reason);
+
+        if ("MUTED".equals(normalizedStatus)) {
+            int hours = (muteDurationHours != null && muteDurationHours > 0) ? muteDurationHours : 24;
+            user.setMutedUntil(java.time.LocalDateTime.now().plusHours(hours));
+        } else if ("ACTIVE".equals(normalizedStatus)) {
+            user.setMutedUntil(null);
+            user.setModerationReason(null);
+        } else if ("BANNED".equals(normalizedStatus)) {
+            user.setMutedUntil(null);
+        }
+
+        userRepository.save(user);
+        return toDto(user);
+    }
+
     public UserDto toDto(User user) {
         return new UserDto(
                 user.getId(),
@@ -137,7 +166,10 @@ public class UserService {
                 user.getDailyGoal(),
                 user.getConsistencyScore(),
                 user.isStreakFreezeAvailable(),
-                user.getStreakFreezeUsedDate()
+                user.getStreakFreezeUsedDate(),
+                user.getStatus() != null ? user.getStatus() : "ACTIVE",
+                user.getMutedUntil(),
+                user.getModerationReason()
         );
     }
 }

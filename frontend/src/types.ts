@@ -14,6 +14,9 @@ export interface User {
   consistencyScore?: number;
   streakFreezeAvailable?: boolean;
   streakFreezeUsedDate?: string | null;
+  status?: 'ACTIVE' | 'MUTED' | 'BANNED' | string;
+  mutedUntil?: string | null;
+  moderationReason?: string | null;
 }
 
 export interface DashboardData {
@@ -336,6 +339,94 @@ export interface Flashcard {
   reviewCount: number;
   due: boolean;
 }
+
+export interface AuditLog {
+  id: number;
+  adminEmail: string;
+  adminName: string;
+  action: string;
+  entityType: string;
+  entityId?: string;
+  details: string;
+  ipAddress: string;
+  createdAt: string;
+}
+
+export interface AdminOverviewStats {
+  totalUsers: number;
+  dailyActiveUsers: number;
+  weeklyActiveUsers: number;
+  totalCompletions: number;
+  averageXp: number;
+  totalTaskSheets: number;
+  totalTasks: number;
+  activeStreaksCount: number;
+  averageConsistencyScore: number;
+}
+
+export interface EngagementTrend {
+  date: string;
+  activeUsers: number;
+  completionsCount: number;
+}
+
+export interface TopicDropOff {
+  topicId: number;
+  topicName: string;
+  topicColor: string;
+  totalTasks: number;
+  totalCompletions: number;
+  completionRate: number;
+  dropOffRate: number;
+  avgConfidence: number;
+}
+
+export interface SheetQuestionStat {
+  taskId: number;
+  taskTitle: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  topicName: string;
+  xpReward: number;
+  completionsCount: number;
+  completionRate: number;
+  avgTimeSpentSeconds: number | null;
+  avgSelfRating: number | null;
+}
+
+export interface SheetAnalytics {
+  sheetId: number;
+  sheetTitle: string;
+  sheetType: string;
+  totalTasks: number;
+  uniqueCompletedUsers: number;
+  overallCompletionRate: number;
+  questionStats: SheetQuestionStat[];
+}
+
+export interface UpdateMemberStatusRequest {
+  status: 'ACTIVE' | 'MUTED' | 'BANNED';
+  muteDurationHours?: number;
+  reason?: string;
+}
+
+export interface Announcement {
+  id: number;
+  title: string;
+  message: string;
+  priority: 'NORMAL' | 'HIGH' | 'URGENT';
+  active: boolean;
+  authorName: string;
+  createdAt: string;
+  expiresAt: string | null;
+}
+
+export interface BroadcastRequest {
+  title: string;
+  message: string;
+  priority?: 'NORMAL' | 'HIGH' | 'URGENT';
+  expiresInDays?: number;
+}
+
 
 
 

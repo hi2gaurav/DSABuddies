@@ -2,8 +2,11 @@ package com.dsabuddies.app.controller;
 
 import com.dsabuddies.app.dto.CreateTaskRequest;
 import com.dsabuddies.app.dto.TaskDto;
+import com.dsabuddies.app.model.User;
+import com.dsabuddies.app.service.AuditService;
 import com.dsabuddies.app.service.TaskService;
 import com.dsabuddies.app.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,6 +24,7 @@ public class TaskController {
 
     private final TaskService taskService;
     private final UserService userService;
+    private final AuditService auditService;
 
     @GetMapping
     public ResponseEntity<List<TaskDto>> getTasks(
@@ -40,14 +44,51 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TaskDto> createTask(@jakarta.validation.Valid @RequestBody CreateTaskRequest request) {
-        return ResponseEntity.ok(taskService.createTask(request));
+    public ResponseEntity<TaskDto> createTask(
+            @jakarta.validation.Valid @RequestBody CreateTaskRequest request,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest servletRequest) {
+        User user = principal != null ? userService.getOrCreateUser(principal) : null;
+        String adminEmail = user != null ? user.getEmail() : "admin@dsabuddies.com";
+        String adminName = user != null ? user.getName() : "Admin";
+
+        TaskDto created = taskService.createTask(request);
+
+        auditService.logWithRequest(
+                adminEmail,
+                adminName,
+                "CREATE_TASK",
+                "TASK",
+                String.valueOf(created.id()),
+                "Created task: " + created.title() + " in sheet ID " + request.taskSheetId(),
+                servletRequest
+        );
+
+        return ResponseEntity.ok(created);
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteTask(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteTask(
+            @PathVariable Long id,
+            @AuthenticationPrincipal OAuth2User principal,
+            HttpServletRequest servletRequest) {
+        User user = principal != null ? userService.getOrCreateUser(principal) : null;
+        String adminEmail = user != null ? user.getEmail() : "admin@dsabuddies.com";
+        String adminName = user != null ? user.getName() : "Admin";
+
         taskService.deleteTask(id);
+
+        auditService.logWithRequest(
+                adminEmail,
+                adminName,
+                "DELETE_TASK",
+                "TASK",
+                String.valueOf(id),
+                "Deleted task ID " + id,
+                servletRequest
+        );
+
         return ResponseEntity.ok().build();
     }
     

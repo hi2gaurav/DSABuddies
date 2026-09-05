@@ -21,6 +21,7 @@ import { ExternalLink, Star, Search, CheckCircle2, Circle, Trophy, Target, Zap, 
 import { useToast } from '../components/ui/Toast';
 import { toSafeUrl } from '../lib/security';
 import { Badge as BadgeType } from '../types';
+import { AnnouncementBanner } from '../components/common/AnnouncementBanner';
 
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -101,6 +102,9 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {/* Broadcast Announcements */}
+      <AnnouncementBanner />
+
       {/* Welcome Banner */}
       <motion.div 
         initial={{ opacity: 0, y: 12 }}

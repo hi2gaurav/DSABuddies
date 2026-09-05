@@ -58,6 +58,13 @@ public class User {
     private LocalDate streakFreezeUsedDate;
 
     @Builder.Default
+    private String status = "ACTIVE";
+
+    private LocalDateTime mutedUntil;
+
+    private String moderationReason;
+
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @PrePersist

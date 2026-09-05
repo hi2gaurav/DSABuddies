@@ -154,5 +154,25 @@ export const api = {
     method: 'POST',
     body: JSON.stringify({ rating }),
   }),
+
+  // Admin Analytics & Moderation (Phase 5)
+  getAdminOverview: () => fetchApi<import('../types').AdminOverviewStats>('/api/admin/analytics/overview'),
+  getAdminEngagement: (days?: number) => fetchApi<import('../types').EngagementTrend[]>(`/api/admin/analytics/engagement?days=${days || 14}`),
+  getAdminTopicDropoff: () => fetchApi<import('../types').TopicDropOff[]>('/api/admin/analytics/topic-dropoff'),
+  getAdminSheetAnalytics: (sheetId: number) => fetchApi<import('../types').SheetAnalytics>(`/api/admin/analytics/sheet-stats/${sheetId}`),
+  getAdminAuditLogs: () => fetchApi<import('../types').AuditLog[]>('/api/admin/analytics/audit-logs'),
+  updateMemberStatus: (userId: number, data: import('../types').UpdateMemberStatusRequest) => fetchApi<User>(`/api/admin/members/${userId}/status`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  // Announcements & Broadcasts
+  broadcastAnnouncement: (data: import('../types').BroadcastRequest) => fetchApi<import('../types').Announcement>('/api/admin/broadcast', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  getAdminAnnouncements: () => fetchApi<import('../types').Announcement[]>('/api/admin/announcements'),
+  deleteAnnouncement: (id: number) => fetchApi<void>(`/api/admin/announcements/${id}`, { method: 'DELETE' }),
+  getActiveAnnouncements: () => fetchApi<import('../types').Announcement[]>('/api/announcements'),
 };
 
