@@ -1,17 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { api } from '../lib/api';
 import { LeaderboardEntry } from '../types';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { Trophy, Star, Flame } from 'lucide-react';
+import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
+import { Trophy, Star, Flame, Search } from 'lucide-react';
 import { clsx } from 'clsx';
 
 const LeaderboardPage: React.FC = () => {
   const [leaders, setLeaders] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<'all' | 'week'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -30,66 +32,113 @@ const LeaderboardPage: React.FC = () => {
     fetchLeaders();
   }, [period]);
 
+  const filteredLeaders = useMemo(() => {
+    return leaders.filter((l) =>
+      l.userName.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [leaders, searchQuery]);
+
+  const whatsappMessage = useMemo(() => {
+    const top3 = leaders.slice(0, 3);
+    let msg = '🏆 *DSA Buddies Community Leaderboard Update!*\n\n';
+    if (top3.length > 0) {
+      top3.forEach((l, idx) => {
+        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
+        msg += `${medal} *#${l.rank} ${l.userName}* — ${l.totalXp} XP (${l.currentStreak}🔥)\n`;
+      });
+    }
+    const myEntry = leaders.find((l) => l.userId === user?.id);
+    if (myEntry) {
+      msg += `\n👤 My Standing: *#${myEntry.rank}* with ${myEntry.totalXp} XP!\n`;
+    }
+    msg += '\nKeep grinding team! 💪';
+    return msg;
+  }, [leaders, user]);
+
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center text-2xl shadow-sm border border-yellow-200 dark:border-yellow-700/50">🥇</div>;
-    if (rank === 2) return <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-2xl shadow-sm border border-gray-200 dark:border-gray-600">🥈</div>;
-    if (rank === 3) return <div className="w-10 h-10 rounded-full bg-orange-50 dark:bg-orange-900/30 flex items-center justify-center text-2xl shadow-sm border border-orange-200 dark:border-orange-800/50">🥉</div>;
-    return <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-slate-800 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400">{rank}</div>;
+    if (rank === 1) return <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center text-xl shadow-sm border border-yellow-300 dark:border-yellow-700/60">🥇</div>;
+    if (rank === 2) return <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl shadow-sm border border-slate-300 dark:border-slate-600">🥈</div>;
+    if (rank === 3) return <div className="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center text-xl shadow-sm border border-amber-300 dark:border-amber-800/60">🥉</div>;
+    return <div className="w-10 h-10 rounded-full bg-gray-50 dark:bg-slate-800 flex items-center justify-center font-bold text-gray-500 dark:text-gray-400 text-sm border border-gray-100 dark:border-slate-700">{rank}</div>;
   };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold dark:text-white flex items-center justify-center sm:justify-start gap-3">
-            Leaderboard <Trophy className="w-8 h-8 text-amber-500" />
+          <h1 className="text-3xl font-bold dark:text-white flex items-center gap-2.5">
+            <span>Community Leaderboard</span>
+            <Trophy className="w-7 h-7 text-amber-500" />
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">See how you rank against your study group.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+            Celebrate streaks, problem solving, and group standings.
+          </p>
         </div>
         
-        <div className="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl inline-flex">
-          <button 
-            className={clsx(
-              "px-6 py-2 rounded-lg font-medium text-sm transition-all",
-              period === 'all' 
-                ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm" 
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            )}
-            onClick={() => setPeriod('all')}
-          >
-            All Time
-          </button>
-          <button 
-            className={clsx(
-              "px-6 py-2 rounded-lg font-medium text-sm transition-all",
-              period === 'week' 
-                ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm" 
-                : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-            )}
-            onClick={() => setPeriod('week')}
-          >
-            This Week
-          </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <ShareToWhatsApp
+            title="Post to WhatsApp"
+            message={whatsappMessage}
+          />
+
+          <div className="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl inline-flex text-xs font-medium">
+            <button 
+              className={clsx(
+                "px-4 py-1.5 rounded-lg transition-all",
+                period === 'all' 
+                  ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-xs font-semibold" 
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              )}
+              onClick={() => setPeriod('all')}
+            >
+              All Time
+            </button>
+            <button 
+              className={clsx(
+                "px-4 py-1.5 rounded-lg transition-all",
+                period === 'week' 
+                  ? "bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-xs font-semibold" 
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              )}
+              onClick={() => setPeriod('week')}
+            >
+              This Week
+            </button>
+          </div>
         </div>
       </div>
 
-      <Card className="overflow-hidden">
+      {/* Member Search Bar */}
+      <div className="relative max-w-sm">
+        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search member by name..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      {/* Leaderboard Table Card */}
+      <Card className="overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-md">
         {loading ? (
           <div className="py-20"><LoadingSpinner size="lg" /></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse min-w-[600px]">
               <thead>
-                <tr className="bg-gray-50 dark:bg-slate-800/80 border-b border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-400 text-sm">
-                  <th className="py-4 px-6 font-medium w-24 text-center">Rank</th>
-                  <th className="py-4 px-6 font-medium">Buddy</th>
-                  <th className="py-4 px-6 font-medium text-center">Tasks Solved</th>
-                  <th className="py-4 px-6 font-medium text-center">Streak</th>
-                  <th className="py-4 px-6 font-medium text-right">Total XP</th>
+                <tr className="bg-gray-50 dark:bg-slate-800/80 border-b border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider font-semibold">
+                  <th className="py-3.5 px-6 w-24 text-center">Rank</th>
+                  <th className="py-3.5 px-6">Member</th>
+                  <th className="py-3.5 px-6 text-center">Problems Solved</th>
+                  <th className="py-3.5 px-6 text-center">Active Streak</th>
+                  <th className="py-3.5 px-6 text-right">Total XP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-slate-700/50">
-                {leaders.map((entry) => {
+                {filteredLeaders.map((entry) => {
                   const isMe = entry.userId === user?.id;
                   
                   return (
@@ -97,7 +146,7 @@ const LeaderboardPage: React.FC = () => {
                       key={entry.userId}
                       className={clsx(
                         "group transition-colors",
-                        isMe ? "bg-blue-50/50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-slate-800/50"
+                        isMe ? "bg-blue-50/70 dark:bg-blue-900/25" : "hover:bg-gray-50/80 dark:hover:bg-slate-800/50"
                       )}
                     >
                       <td className="py-4 px-6">
@@ -107,37 +156,44 @@ const LeaderboardPage: React.FC = () => {
                       </td>
                       <td className="py-4 px-6">
                         <div 
-                          className="flex items-center gap-4 cursor-pointer"
+                          className="flex items-center gap-3.5 cursor-pointer"
                           onClick={() => navigate(`/profile/${entry.userId}`)}
                         >
                           <img 
-                            src={entry.userAvatar || `https://ui-avatars.com/api/?name=${entry.userName}`} 
+                            src={entry.userAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(entry.userName)}`} 
                             alt={entry.userName} 
-                            className="w-12 h-12 rounded-full border-2 border-white dark:border-slate-700 shadow-sm"
+                            className="w-11 h-11 rounded-full border-2 border-white dark:border-slate-700 shadow-sm object-cover flex-shrink-0"
                           />
                           <div>
                             <p className={clsx(
-                              "font-bold text-base group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors",
+                              "font-bold text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors flex items-center gap-2",
                               isMe ? "text-blue-700 dark:text-blue-400" : "text-gray-900 dark:text-white"
                             )}>
-                              {entry.userName} {isMe && <span className="text-xs font-normal bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-2 py-0.5 rounded-full ml-2">You</span>}
+                              <span>{entry.userName}</span>
+                              {isMe && (
+                                <span className="text-[10px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                                  You
+                                </span>
+                              )}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                        <span className="font-semibold text-gray-700 dark:text-gray-300 text-sm">
                           {entry.tasksCompleted}
                         </span>
                       </td>
                       <td className="py-4 px-6 text-center">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 rounded-full font-medium">
-                          <Flame className="w-4 h-4" /> {entry.currentStreak}
+                        <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 rounded-full font-semibold text-xs border border-orange-200/50 dark:border-orange-800/40">
+                          <Flame className="w-3.5 h-3.5 fill-current" />
+                          <span>{entry.currentStreak} Days</span>
                         </div>
                       </td>
                       <td className="py-4 px-6 text-right">
-                        <div className="inline-flex items-center gap-1.5 font-bold text-lg text-amber-500">
-                          <Star className="w-5 h-5 fill-current" /> {entry.totalXp}
+                        <div className="inline-flex items-center gap-1.5 font-bold text-base text-amber-500">
+                          <Star className="w-4 h-4 fill-current" />
+                          <span>{entry.totalXp}</span>
                         </div>
                       </td>
                     </tr>
@@ -146,9 +202,9 @@ const LeaderboardPage: React.FC = () => {
               </tbody>
             </table>
             
-            {leaders.length === 0 && (
-              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
-                No leaderboard data available for this period.
+            {filteredLeaders.length === 0 && (
+              <div className="py-12 text-center text-gray-500 dark:text-gray-400 text-sm">
+                No members found matching your search.
               </div>
             )}
           </div>

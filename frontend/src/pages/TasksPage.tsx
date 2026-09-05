@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { TaskSheet } from '../types';
@@ -6,19 +6,21 @@ import { useAuth } from '../hooks/useAuth';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import { Calendar, CheckCircle2, ChevronRight } from 'lucide-react';
+import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
+import { Calendar, CheckCircle2, ChevronRight, Search, Plus } from 'lucide-react';
 
 const TasksPage: React.FC = () => {
   const [sheets, setSheets] = useState<TaskSheet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'all' | 'active'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'ALL' | 'ACTIVE' | 'DAILY' | 'WEEKLY'>('ALL');
   const navigate = useNavigate();
   const { user } = useAuth();
 
   useEffect(() => {
     const fetchSheets = async () => {
       try {
-        const data = await api.getTaskSheets(filter === 'active');
+        const data = await api.getTaskSheets();
         setSheets(data);
       } catch (error) {
         console.error(error);
@@ -27,107 +29,156 @@ const TasksPage: React.FC = () => {
       }
     };
     fetchSheets();
-  }, [filter]);
+  }, []);
+
+  const filteredSheets = useMemo(() => {
+    return sheets.filter((sheet) => {
+      const matchesSearch = sheet.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            (sheet.description && sheet.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const now = new Date();
+      const isActive = new Date(sheet.startDate) <= now && new Date(sheet.endDate) >= now;
+
+      let matchesType = true;
+      if (typeFilter === 'ACTIVE') matchesType = isActive;
+      else if (typeFilter === 'DAILY') matchesType = sheet.sheetType === 'DAILY';
+      else if (typeFilter === 'WEEKLY') matchesType = sheet.sheetType === 'WEEKLY';
+
+      return matchesSearch && matchesType;
+    });
+  }, [sheets, searchQuery, typeFilter]);
 
   if (loading) return <div className="py-20"><LoadingSpinner size="lg" /></div>;
 
   return (
     <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold dark:text-white">Task Sheets</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Complete tasks to earn XP and build your streak.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Browse daily and weekly challenges, track your group problem-solving.
+          </p>
         </div>
         
-        <div className="flex items-center gap-3">
-          <select 
-            value={filter}
-            onChange={(e) => setFilter(e.target.value as 'all' | 'active')}
-            className="bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Sheets</option>
-            <option value="active">Active Only</option>
-          </select>
-          
+        <div className="flex items-center gap-3 flex-wrap">
+          <ShareToWhatsApp
+            title="Share Sheets"
+            message={`📚 Check out the latest DSA problem sheets on DSA Buddies!\nSolve problems, build your streak, and climb the leaderboard.`}
+          />
+
           {user?.role === 'ROLE_ADMIN' && (
             <button 
               onClick={() => navigate('/admin')}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all"
             >
-              + New Sheet
+              <Plus className="w-4 h-4" />
+              <span>Create Sheet</span>
             </button>
           )}
         </div>
       </div>
 
-      {sheets.length === 0 ? (
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search sheets by title or topic..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-medium">
+          {(['ALL', 'ACTIVE', 'DAILY', 'WEEKLY'] as const).map((type) => (
+            <button
+              key={type}
+              onClick={() => setTypeFilter(type)}
+              className={`px-3 py-1.5 rounded-lg transition-all ${
+                typeFilter === type
+                  ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-xs font-semibold'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+              }`}
+            >
+              {type === 'ALL' ? 'All Sheets' : type === 'ACTIVE' ? 'Active' : type.charAt(0) + type.slice(1).toLowerCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Sheets Grid */}
+      {filteredSheets.length === 0 ? (
         <Card className="p-12 text-center bg-gray-50 dark:bg-slate-800/50">
           <div className="bg-gray-200 dark:bg-slate-700 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle2 className="w-8 h-8 text-gray-400 dark:text-slate-500" />
           </div>
           <h3 className="text-xl font-bold dark:text-white mb-2">No task sheets found</h3>
-          <p className="text-gray-500 dark:text-gray-400">
-            {filter === 'active' ? "There are no active challenges right now." : "Check back later for new tasks."}
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            {searchQuery ? "No sheets match your search query." : "Check back later for new group tasks."}
           </p>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {sheets.map((sheet) => {
+          {filteredSheets.map((sheet) => {
             const totalTasks = sheet.tasks.length;
-            const completedTasks = sheet.tasks.filter(t => t.completed).length;
-            const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+            const completedTasks = sheet.tasks.filter((t) => t.completed).length;
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
             
             const startDate = new Date(sheet.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             const endDate = new Date(sheet.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
             
-            const isActive = new Date(sheet.startDate) <= new Date() && new Date(sheet.endDate) >= new Date();
+            const now = new Date();
+            const isActive = new Date(sheet.startDate) <= now && new Date(sheet.endDate) >= now;
 
             return (
               <Card 
                 key={sheet.id} 
                 hover 
                 onClick={() => navigate(`/tasks/${sheet.id}`)}
-                className="flex flex-col h-full"
+                className="flex flex-col h-full overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-sm hover:shadow-md transition-all"
               >
-                <div className="p-6 flex-1">
-                  <div className="flex justify-between items-start mb-4">
-                    <Badge variant="default" className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="flex justify-between items-start mb-3">
+                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-semibold">
                       {sheet.sheetType}
                     </Badge>
                     {isActive && (
-                      <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Active
+                        Active Now
                       </span>
                     )}
                   </div>
                   
-                  <h3 className="text-xl font-bold dark:text-white mb-2">{sheet.title}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4">
+                  <h3 className="text-xl font-bold dark:text-white mb-2 line-clamp-1">{sheet.title}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
                     {sheet.description}
                   </p>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-                    <Calendar className="w-4 h-4" />
-                    {startDate} - {endDate}
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-5">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {startDate} — {endDate}
                   </div>
                   
-                  <div className="mt-auto">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">Progress</span>
-                      <span className="text-gray-500 dark:text-gray-400">{completedTasks}/{totalTasks}</span>
+                  <div className="mt-auto pt-3 border-t border-gray-100 dark:border-slate-800">
+                    <div className="flex justify-between text-xs font-semibold mb-1">
+                      <span className="text-gray-700 dark:text-gray-300">Solved</span>
+                      <span className="text-emerald-600 dark:text-emerald-400">{completedTasks}/{totalTasks} ({progress}%)</span>
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
+                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                       <div 
-                        className="bg-emerald-500 h-2 rounded-full transition-all duration-500" 
+                        className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
                         style={{ width: `${progress}%` }}
                       ></div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="px-6 py-3 bg-gray-50 dark:bg-slate-800/80 border-t border-gray-100 dark:border-slate-700/50 flex justify-between items-center text-sm font-medium text-blue-600 dark:text-blue-400 group">
-                  View Tasks
+                <div className="px-6 py-3 bg-gray-50 dark:bg-slate-850 border-t border-gray-100 dark:border-slate-800 flex justify-between items-center text-xs font-semibold text-blue-600 dark:text-blue-400 group">
+                  <span>Explore Problems</span>
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </div>
               </Card>

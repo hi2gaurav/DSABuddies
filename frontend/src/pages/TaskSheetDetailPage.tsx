@@ -1,17 +1,25 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { TaskSheet } from '../types';
+import { TaskSheet, Task } from '../types';
 import Badge from '../components/ui/Badge';
+import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
+import SolutionModal from '../components/tasks/SolutionModal';
 import { useToast } from '../components/ui/Toast';
-import { ArrowLeft, Calendar, ExternalLink, Star, Check } from 'lucide-react';
+import { ArrowLeft, Calendar, ExternalLink, Star, CheckCircle2, Circle, Search } from 'lucide-react';
+import { toSafeUrl } from '../lib/security';
 
 const TaskSheetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [sheet, setSheet] = useState<TaskSheet | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [difficultyFilter, setDifficultyFilter] = useState<'ALL' | 'EASY' | 'MEDIUM' | 'HARD'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'SOLVED' | 'UNSOLVED'>('ALL');
+  const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<Task | null>(null);
   const { show } = useToast();
 
   const fetchSheet = async () => {
@@ -30,142 +38,243 @@ const TaskSheetDetailPage: React.FC = () => {
     fetchSheet();
   }, [id]);
 
-  const toggleTaskCompletion = async (taskId: number, completed: boolean) => {
-    if (!sheet) return;
-    
-    // Optimistic update
-    const newTasks = sheet.tasks.map(t => 
-      t.id === taskId ? { ...t, completed: !completed } : t
-    );
-    setSheet({ ...sheet, tasks: newTasks });
-
-    try {
-      if (completed) {
-        await api.uncompleteTask(taskId);
-      } else {
-        await api.completeTask(taskId);
-        show('Task completed! +XP', 'success');
+  const handleTaskClick = async (task: Task) => {
+    if (task.completed) {
+      try {
+        await api.uncompleteTask(task.id);
+        show('Problem marked incomplete', 'info');
+        fetchSheet();
+      } catch (error) {
+        show('Action failed', 'error');
       }
-    } catch (error) {
-      // Revert on error
-      show('Action failed', 'error');
-      fetchSheet();
+    } else {
+      setSelectedTaskForCompletion(task);
     }
   };
+
+  const handleModalSubmit = async (solutionLink: string, notes: string) => {
+    if (!selectedTaskForCompletion) return;
+    try {
+      await api.completeTask(selectedTaskForCompletion.id, { solutionLink, notes });
+      show(`Task completed! +${selectedTaskForCompletion.xpReward} XP earned ⭐`, 'success');
+      fetchSheet();
+    } catch (error) {
+      show('Failed to complete task', 'error');
+    }
+  };
+
+  const filteredTasks = useMemo(() => {
+    if (!sheet?.tasks) return [];
+    return sheet.tasks.filter((t) => {
+      const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            t.topicName.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesDiff = difficultyFilter === 'ALL' || t.difficulty === difficultyFilter;
+      const matchesStatus = statusFilter === 'ALL' ||
+                            (statusFilter === 'SOLVED' && t.completed) ||
+                            (statusFilter === 'UNSOLVED' && !t.completed);
+      return matchesSearch && matchesDiff && matchesStatus;
+    });
+  }, [sheet?.tasks, searchQuery, difficultyFilter, statusFilter]);
 
   if (loading) return <div className="py-20"><LoadingSpinner size="lg" /></div>;
   if (!sheet) return null;
 
   const totalTasks = sheet.tasks.length;
-  const completedTasks = sheet.tasks.filter(t => t.completed).length;
-  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  
-  const startDate = new Date(sheet.startDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-  const endDate = new Date(sheet.endDate).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const completedTasks = sheet.tasks.filter((t) => t.completed).length;
+  const progressPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const totalXp = sheet.tasks.reduce((sum, t) => sum + t.xpReward, 0);
+  const earnedXp = sheet.tasks.filter((t) => t.completed).reduce((sum, t) => sum + t.xpReward, 0);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <button 
-        onClick={() => navigate('/tasks')}
-        className="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" /> Back to Task Sheets
-      </button>
+    <div className="space-y-6">
+      {/* Back button & header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <button
+          onClick={() => navigate('/tasks')}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to All Sheets</span>
+        </button>
 
-      <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden">
-        {/* Header */}
-        <div className="p-6 sm:p-8 bg-gradient-to-br from-blue-50 to-white dark:from-slate-800 dark:to-slate-800/80 border-b border-gray-200 dark:border-slate-700 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-          
-          <div className="relative z-10">
-            <div className="flex flex-wrap items-center gap-3 mb-4">
-              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+        <ShareToWhatsApp
+          title="Share Sheet on WhatsApp"
+          message={`📋 DSA Buddies Sheet: "${sheet.title}"\n🎯 Progress: ${completedTasks}/${totalTasks} Problems (${progressPercent}%)\n⭐ XP Earned: ${earnedXp}/${totalXp}\nLet's crush this together team!`}
+        />
+      </div>
+
+      {/* Sheet Overview Card */}
+      <Card className="p-6 bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-850 border-slate-200 dark:border-slate-700 shadow-md">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-semibold">
                 {sheet.sheetType}
               </Badge>
-              <span className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
-                <Calendar className="w-4 h-4" /> {startDate} — {endDate}
+              <span className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5" />
+                {sheet.startDate} to {sheet.endDate}
               </span>
             </div>
-            
-            <h1 className="text-3xl font-bold dark:text-white mb-2">{sheet.title}</h1>
-            <p className="text-gray-600 dark:text-gray-300 max-w-2xl">{sheet.description}</p>
-            
-            {/* Progress Bar */}
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-slate-700/50">
-              <div className="flex justify-between items-end mb-2">
-                <div>
-                  <p className="text-sm font-medium text-gray-500 dark:text-gray-400">Your Progress</p>
-                  <p className="text-2xl font-bold dark:text-white">{Math.round(progress)}%</p>
-                </div>
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  {completedTasks} of {totalTasks} tasks
-                </div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{sheet.title}</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{sheet.description}</p>
+          </div>
+
+          {/* Mini Stats Banner */}
+          <div className="flex items-center gap-4 border-t md:border-t-0 md:border-l border-gray-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-6 flex-shrink-0">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {completedTasks}/{totalTasks}
               </div>
-              <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                <div 
-                  className="bg-emerald-500 h-full rounded-full transition-all duration-1000 ease-out relative" 
-                  style={{ width: `${progress}%` }}
-                >
-                  <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">Problems</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-amber-500">
+                {earnedXp}
               </div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">XP Earned</div>
             </div>
           </div>
         </div>
 
-        {/* Tasks List */}
-        <div className="p-0">
-          <div className="divide-y divide-gray-100 dark:divide-slate-700/50">
-            {sheet.tasks.map((task, index) => (
-              <div key={task.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-slate-800/50 transition-colors flex items-start gap-4 sm:gap-6 group">
-                <button 
-                  onClick={() => toggleTaskCompletion(task.id, task.completed)}
-                  className={`mt-1 w-8 h-8 rounded-lg flex items-center justify-center border-2 flex-shrink-0 transition-all duration-200 ${
-                    task.completed 
-                      ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/20' 
-                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-slate-800 hover:border-emerald-400 group-hover:scale-105'
-                  }`}
-                >
-                  {task.completed && <Check className="w-5 h-5" strokeWidth={3} />}
-                </button>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                    <h3 className={`text-lg font-semibold transition-colors ${
-                      task.completed ? 'text-gray-500 dark:text-gray-400 line-through' : 'text-gray-900 dark:text-white'
-                    }`}>
-                      {index + 1}. {task.title}
-                    </h3>
-                    
-                    <a 
-                      href={task.platformLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer" 
-                      className="inline-flex items-center gap-1.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full w-max"
-                    >
-                      Solve Problem <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                  
-                  <p className={`text-sm mb-4 line-clamp-2 ${
-                    task.completed ? 'text-gray-400 dark:text-gray-500' : 'text-gray-600 dark:text-gray-300'
-                  }`}>
-                    {task.description}
-                  </p>
-                  
-                  <div className="flex flex-wrap items-center gap-2">
-                    <Badge variant={task.difficulty.toLowerCase() as any}>{task.difficulty}</Badge>
-                    <Badge color={task.topicColor}>{task.topicName}</Badge>
-                    <span className="flex items-center gap-1 text-sm font-bold text-amber-500 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded-full ml-auto">
-                      <Star className="w-3.5 h-3.5 fill-current" /> {task.xpReward} XP
-                    </span>
-                  </div>
-                </div>
-              </div>
+        {/* Progress Bar */}
+        <div className="mt-6 pt-4 border-t border-gray-100 dark:border-slate-700/60">
+          <div className="flex items-center justify-between text-xs font-semibold mb-1.5">
+            <span className="text-gray-700 dark:text-gray-300">Completion Status</span>
+            <span className="text-emerald-600 dark:text-emerald-400">{progressPercent}%</span>
+          </div>
+          <div className="w-full bg-gray-200 dark:bg-slate-700 h-2.5 rounded-full overflow-hidden">
+            <div
+              className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+        </div>
+      </Card>
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search problems by name or topic..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Difficulty filter */}
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-medium">
+            {(['ALL', 'EASY', 'MEDIUM', 'HARD'] as const).map((diff) => (
+              <button
+                key={diff}
+                onClick={() => setDifficultyFilter(diff)}
+                className={`px-2.5 py-1 rounded-lg transition-all ${
+                  difficultyFilter === diff
+                    ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                {diff === 'ALL' ? 'All' : diff.charAt(0) + diff.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          {/* Completion status filter */}
+          <div className="flex items-center gap-1 bg-gray-100 dark:bg-slate-800 p-1 rounded-xl text-xs font-medium">
+            {(['ALL', 'SOLVED', 'UNSOLVED'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setStatusFilter(status)}
+                className={`px-2.5 py-1 rounded-lg transition-all ${
+                  statusFilter === status
+                    ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-xs font-semibold'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                {status === 'ALL' ? 'All Status' : status === 'SOLVED' ? 'Solved' : 'Pending'}
+              </button>
             ))}
           </div>
         </div>
       </div>
+
+      {/* Task List */}
+      <Card className="p-0 overflow-hidden divide-y divide-gray-100 dark:divide-slate-700/60 shadow-md">
+        {filteredTasks.length > 0 ? (
+          filteredTasks.map((task) => (
+            <div
+              key={task.id}
+              className={`p-4 sm:p-5 transition-colors flex items-center gap-4 ${
+                task.completed
+                  ? 'bg-emerald-500/5 dark:bg-emerald-950/10'
+                  : 'hover:bg-gray-50/80 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <button
+                onClick={() => handleTaskClick(task)}
+                title={task.completed ? 'Click to unmark' : 'Click to complete problem'}
+                className={`w-7 h-7 rounded-lg flex items-center justify-center border-2 flex-shrink-0 transition-all ${
+                  task.completed
+                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/30'
+                    : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                {task.completed ? (
+                  <CheckCircle2 className="w-5 h-5 fill-white text-emerald-500" />
+                ) : (
+                  <Circle className="w-5 h-5 text-transparent" />
+                )}
+              </button>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <a
+                    href={toSafeUrl(task.platformLink)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 truncate text-base"
+                  >
+                    <span className={task.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
+                      {task.title}
+                    </span>
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  </a>
+                </div>
+
+                {task.description && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mb-2">
+                    {task.description}
+                  </p>
+                )}
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant={task.difficulty.toLowerCase() as any}>{task.difficulty}</Badge>
+                  <Badge color={task.topicColor}>{task.topicName}</Badge>
+                  <span className="text-xs font-semibold text-amber-500 flex items-center gap-1">
+                    <Star className="w-3.5 h-3.5 fill-current" /> {task.xpReward} XP
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="p-12 text-center">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">No challenges match your search filters.</p>
+          </div>
+        )}
+      </Card>
+
+      {/* Solution & Notes Modal */}
+      <SolutionModal
+        task={selectedTaskForCompletion}
+        isOpen={selectedTaskForCompletion !== null}
+        onClose={() => setSelectedTaskForCompletion(null)}
+        onSubmit={handleModalSubmit}
+      />
     </div>
   );
 };

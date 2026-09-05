@@ -26,7 +26,7 @@ public class TaskCompletionController {
     @PostMapping("/tasks/{taskId}/complete")
     public ResponseEntity<TaskCompletionDto> completeTask(
             @PathVariable Long taskId,
-            @RequestBody(required = false) CompleteTaskRequest request,
+            @jakarta.validation.Valid @RequestBody(required = false) CompleteTaskRequest request,
             @AuthenticationPrincipal OAuth2User principal) {
         if (principal == null) {
             return ResponseEntity.status(401).build();

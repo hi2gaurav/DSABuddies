@@ -23,7 +23,7 @@ public class TopicController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TopicDto> createTopic(@RequestBody TopicDto request) {
+    public ResponseEntity<TopicDto> createTopic(@jakarta.validation.Valid @RequestBody TopicDto request) {
         return ResponseEntity.ok(topicService.createTopic(request.name(), request.color(), request.icon()));
     }
 }

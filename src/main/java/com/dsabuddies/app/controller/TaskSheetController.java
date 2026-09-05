@@ -43,7 +43,7 @@ public class TaskSheetController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TaskSheetDto> createTaskSheet(
-            @RequestBody CreateTaskSheetRequest request,
+            @jakarta.validation.Valid @RequestBody CreateTaskSheetRequest request,
             @AuthenticationPrincipal OAuth2User principal) {
         if (principal == null) {
             return ResponseEntity.status(401).build();

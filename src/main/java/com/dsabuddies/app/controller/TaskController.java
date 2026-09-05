@@ -40,7 +40,7 @@ public class TaskController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<TaskDto> createTask(@RequestBody CreateTaskRequest request) {
+    public ResponseEntity<TaskDto> createTask(@jakarta.validation.Valid @RequestBody CreateTaskRequest request) {
         return ResponseEntity.ok(taskService.createTask(request));
     }
 
