@@ -58,7 +58,7 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login/**", "/error", "/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico", "/api/auth/status").permitAll()
-                .requestMatchers("/api/tasks/*/complete", "/api/tasks/**/complete").authenticated()
+                .requestMatchers("/api/tasks/*/complete").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasRole("ADMIN")
