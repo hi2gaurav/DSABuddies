@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task_completions", uniqueConstraints = {
+@Table(name = "bookmarks", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "task_id"})
 })
 @Getter
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TaskCompletion {
+public class Bookmark {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,20 +29,12 @@ public class TaskCompletion {
     private Task task;
 
     @Builder.Default
-    private LocalDateTime completedAt = LocalDateTime.now();
-
-    private String solutionLink;
-
-    private String notes;
-
-    private Integer timeSpentSeconds; // Time taken to solve
-
-    private Integer selfRating; // 1-5 confidence rating for spaced repetition
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @PrePersist
     protected void onCreate() {
-        if (completedAt == null) {
-            completedAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
     }
 }

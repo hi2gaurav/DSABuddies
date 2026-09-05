@@ -23,6 +23,7 @@ public class TaskCompletionService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final SpacedRepetitionService spacedRepetitionService;
 
     @Transactional
     public TaskCompletionDto completeTask(Long taskId, Long userId, CompleteTaskRequest request) {
@@ -38,6 +39,8 @@ public class TaskCompletionService {
                 .task(task)
                 .solutionLink(request != null ? request.solutionLink() : null)
                 .notes(request != null ? request.notes() : null)
+                .timeSpentSeconds(request != null ? request.timeSpentSeconds() : null)
+                .selfRating(request != null ? request.selfRating() : null)
                 .completedAt(LocalDateTime.now())
                 .build();
                 
@@ -45,6 +48,9 @@ public class TaskCompletionService {
         
         user.setTotalXp(user.getTotalXp() + task.getXpReward());
         userService.updateStreak(user); // Also saves user
+        
+        // Auto-schedule spaced repetition review
+        spacedRepetitionService.scheduleReview(user, task);
         
         return toDto(completion);
     }

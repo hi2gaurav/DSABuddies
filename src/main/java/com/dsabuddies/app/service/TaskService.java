@@ -20,6 +20,9 @@ public class TaskService {
     private final TaskSheetRepository taskSheetRepository;
     private final TopicRepository topicRepository;
     private final TaskCompletionRepository taskCompletionRepository;
+    private final com.dsabuddies.app.repository.ReviewQueueRepository reviewQueueRepository;
+    private final com.dsabuddies.app.repository.BookmarkRepository bookmarkRepository;
+    private final com.dsabuddies.app.repository.UserNoteRepository userNoteRepository;
 
     public TaskDto createTask(CreateTaskRequest request) {
         Task task = Task.builder()
@@ -48,6 +51,9 @@ public class TaskService {
     @org.springframework.transaction.annotation.Transactional
     public void deleteTask(Long id) {
         taskCompletionRepository.deleteByTaskId(id);
+        reviewQueueRepository.deleteByTaskId(id);
+        bookmarkRepository.deleteByTaskId(id);
+        userNoteRepository.deleteByTaskId(id);
         taskRepository.deleteById(id);
     }
 
@@ -57,7 +63,8 @@ public class TaskService {
                 task.getId(), task.getTitle(), task.getDescription(), task.getDifficulty(),
                 task.getTopic() != null ? task.getTopic().getName() : null,
                 task.getTopic() != null ? task.getTopic().getColor() : null,
-                task.getPlatformLink(), task.getXpReward(), completed
+                task.getPlatformLink(), task.getXpReward(), completed,
+                task.getCompanyTags(), task.getPatternTags()
         );
     }
 }

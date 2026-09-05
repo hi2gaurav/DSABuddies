@@ -73,4 +73,34 @@ export const api = {
   
   // Topics
   getTopics: () => fetchApi<Topic[]>('/api/topics'),
+
+  // Spaced Repetition
+  getDueReviews: () => fetchApi<import('../types').ReviewItem[]>('/api/reviews/due'),
+  getUpcomingReviews: () => fetchApi<import('../types').ReviewItem[]>('/api/reviews/upcoming'),
+  getDueReviewCount: () => fetchApi<{ dueCount: number }>('/api/reviews/count'),
+  submitReview: (taskId: number, rating: number) => fetchApi<import('../types').ReviewItem>(`/api/reviews/${taskId}/submit`, {
+    method: 'POST',
+    body: JSON.stringify({ rating }),
+  }),
+
+  // Bookmarks
+  getBookmarks: () => fetchApi<import('../types').Bookmark[]>('/api/bookmarks'),
+  addBookmark: (taskId: number) => fetchApi<import('../types').Bookmark>(`/api/bookmarks/${taskId}`, { method: 'POST' }),
+  removeBookmark: (taskId: number) => fetchApi<void>(`/api/bookmarks/${taskId}`, { method: 'DELETE' }),
+  checkBookmark: (taskId: number) => fetchApi<{ bookmarked: boolean }>(`/api/bookmarks/${taskId}/status`),
+
+  // Personal Notes
+  getNotes: () => fetchApi<import('../types').UserNote[]>('/api/notes'),
+  getNote: (taskId: number) => fetchApi<import('../types').UserNote>(`/api/notes/${taskId}`),
+  saveNote: (taskId: number, data: import('../types').SaveNoteRequest) => fetchApi<import('../types').UserNote>(`/api/notes/${taskId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteNote: (taskId: number) => fetchApi<void>(`/api/notes/${taskId}`, { method: 'DELETE' }),
+
+  // Analytics & Weak Topics
+  getWeakTopics: () => fetchApi<import('../types').WeakTopic[]>('/api/analytics/weak-topics'),
+  getAdaptiveSuggestions: () => fetchApi<import('../types').AdaptiveSuggestion[]>('/api/analytics/suggestions'),
+  getPatternStats: () => fetchApi<import('../types').PatternStat[]>('/api/analytics/patterns'),
 };
+

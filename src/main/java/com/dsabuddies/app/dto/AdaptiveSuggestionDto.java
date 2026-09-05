@@ -1,15 +1,12 @@
 package com.dsabuddies.app.dto;
 
-public record TaskDto(
-    Long id,
+public record AdaptiveSuggestionDto(
+    Long taskId,
     String title,
-    String description,
     String difficulty,
     String topicName,
     String topicColor,
     String platformLink,
     int xpReward,
-    boolean completed,
-    String companyTags,
-    String patternTags
+    String reason
 ) {}

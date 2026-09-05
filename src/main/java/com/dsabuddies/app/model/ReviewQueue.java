@@ -3,10 +3,11 @@ package com.dsabuddies.app.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task_completions", uniqueConstraints = {
+@Table(name = "review_queues", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "task_id"})
 })
 @Getter
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TaskCompletion {
+public class ReviewQueue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,21 +29,24 @@ public class TaskCompletion {
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
+    @Column(nullable = false)
+    private LocalDate nextReviewDate;
+
     @Builder.Default
-    private LocalDateTime completedAt = LocalDateTime.now();
+    private int intervalDays = 1;
 
-    private String solutionLink;
+    @Builder.Default
+    private double easeFactor = 2.5; // SM-2 standard default
 
-    private String notes;
+    @Builder.Default
+    private int reviewCount = 0;
 
-    private Integer timeSpentSeconds; // Time taken to solve
-
-    private Integer selfRating; // 1-5 confidence rating for spaced repetition
+    private LocalDateTime lastReviewedAt;
 
     @PrePersist
     protected void onCreate() {
-        if (completedAt == null) {
-            completedAt = LocalDateTime.now();
+        if (nextReviewDate == null) {
+            nextReviewDate = LocalDate.now().plusDays(1);
         }
     }
 }

@@ -6,7 +6,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "task_completions", uniqueConstraints = {
+@Table(name = "user_notes", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"user_id", "task_id"})
 })
 @Getter
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TaskCompletion {
+public class UserNote {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,21 +28,29 @@ public class TaskCompletion {
     @JoinColumn(name = "task_id", nullable = false)
     private Task task;
 
+    @Column(columnDefinition = "TEXT")
+    private String content;
+
+    @Column(columnDefinition = "TEXT")
+    private String codeSnippet;
+
+    private String language; // e.g. "java", "python", "cpp"
+
     @Builder.Default
-    private LocalDateTime completedAt = LocalDateTime.now();
+    private LocalDateTime createdAt = LocalDateTime.now();
 
-    private String solutionLink;
-
-    private String notes;
-
-    private Integer timeSpentSeconds; // Time taken to solve
-
-    private Integer selfRating; // 1-5 confidence rating for spaced repetition
+    private LocalDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
-        if (completedAt == null) {
-            completedAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

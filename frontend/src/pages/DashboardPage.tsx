@@ -12,7 +12,10 @@ import CoinRewardOverlay from '../components/common/CoinRewardOverlay';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import SolutionModal from '../components/tasks/SolutionModal';
-import { ExternalLink, Star, Search, CheckCircle2, Circle, Trophy, Target, Zap } from 'lucide-react';
+import WeakAreaWidget from '../components/dashboard/WeakAreaWidget';
+import BookmarkButton from '../components/common/BookmarkButton';
+import NoteModal from '../components/common/NoteModal';
+import { ExternalLink, Star, Search, CheckCircle2, Circle, Trophy, Target, Zap, FileText } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { toSafeUrl } from '../lib/security';
 
@@ -22,6 +25,7 @@ const DashboardPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState<'ALL' | 'EASY' | 'MEDIUM' | 'HARD'>('ALL');
   const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<Task | null>(null);
+  const [selectedNoteTask, setSelectedNoteTask] = useState<{ id: number; title: string } | null>(null);
   const [rewardXp, setRewardXp] = useState<number | null>(null);
   const { user } = useAuth();
   const { show } = useToast();
@@ -237,30 +241,46 @@ const DashboardPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Prominent Task Action Button (Completed or Mark Solved) */}
-                    <motion.button
-                      whileHover={{ scale: 1.04 }}
-                      whileTap={{ scale: 0.94 }}
-                      onClick={() => handleTaskClick(task)}
-                      className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 flex-shrink-0 transition-all shadow-xs ${
-                        task.completed
-                          ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-500/20'
-                          : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400'
-                      }`}
-                      title={task.completed ? 'Click to unmark problem' : 'Click to complete problem and submit notes'}
-                    >
-                      {task.completed ? (
-                        <>
-                          <CheckCircle2 className="w-4 h-4 fill-white text-emerald-500" />
-                          <span>Completed ✓</span>
-                        </>
-                      ) : (
-                        <>
-                          <Circle className="w-4 h-4 text-gray-400" />
-                          <span>Mark Solved</span>
-                        </>
-                      )}
-                    </motion.button>
+                    {/* Task Actions: Bookmark, Notes, Complete */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <BookmarkButton taskId={task.id} />
+
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        type="button"
+                        onClick={() => setSelectedNoteTask({ id: task.id, title: task.title })}
+                        className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                        title="Personal Notes & Code"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </motion.button>
+
+                      {/* Prominent Task Action Button (Completed or Mark Solved) */}
+                      <motion.button
+                        whileHover={{ scale: 1.04 }}
+                        whileTap={{ scale: 0.94 }}
+                        onClick={() => handleTaskClick(task)}
+                        className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-xs ${
+                          task.completed
+                            ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-500/20'
+                            : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400'
+                        }`}
+                        title={task.completed ? 'Click to unmark problem' : 'Click to complete problem and submit notes'}
+                      >
+                        {task.completed ? (
+                          <>
+                            <CheckCircle2 className="w-4 h-4 fill-white text-emerald-500" />
+                            <span>Completed ✓</span>
+                          </>
+                        ) : (
+                          <>
+                            <Circle className="w-4 h-4 text-gray-400" />
+                            <span>Mark Solved</span>
+                          </>
+                        )}
+                      </motion.button>
+                    </div>
                   </motion.div>
                 ))
               ) : (
@@ -331,6 +351,11 @@ const DashboardPage: React.FC = () => {
         </div>
       </section>
 
+      {/* WEAK-AREA DETECTION & ADAPTIVE SUGGESTIONS SECTION */}
+      <section>
+        <WeakAreaWidget />
+      </section>
+
       {/* Solution & Notes Modal */}
       <SolutionModal
         task={selectedTaskForCompletion}
@@ -338,6 +363,16 @@ const DashboardPage: React.FC = () => {
         onClose={() => setSelectedTaskForCompletion(null)}
         onSubmit={handleModalSubmit}
       />
+
+      {/* Personal Notes & Code Modal */}
+      {selectedNoteTask && (
+        <NoteModal
+          taskId={selectedNoteTask.id}
+          taskTitle={selectedNoteTask.title}
+          isOpen={true}
+          onClose={() => setSelectedNoteTask(null)}
+        />
+      )}
 
       {/* Animated Golden Coin Credit Effect */}
       {rewardXp !== null && (

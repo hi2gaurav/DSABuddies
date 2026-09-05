@@ -20,6 +20,9 @@ import java.util.stream.Collectors;
 public class TaskSheetService {
     private final TaskSheetRepository taskSheetRepository;
     private final TaskCompletionRepository taskCompletionRepository;
+    private final com.dsabuddies.app.repository.ReviewQueueRepository reviewQueueRepository;
+    private final com.dsabuddies.app.repository.BookmarkRepository bookmarkRepository;
+    private final com.dsabuddies.app.repository.UserNoteRepository userNoteRepository;
 
     public TaskSheetDto createTaskSheet(CreateTaskSheetRequest request, User createdBy) {
         TaskSheet sheet = TaskSheet.builder()
@@ -50,6 +53,9 @@ public class TaskSheetService {
     @org.springframework.transaction.annotation.Transactional
     public void deleteTaskSheet(Long id) {
         taskCompletionRepository.deleteByTaskTaskSheetId(id);
+        reviewQueueRepository.deleteByTaskTaskSheetId(id);
+        bookmarkRepository.deleteByTaskTaskSheetId(id);
+        userNoteRepository.deleteByTaskTaskSheetId(id);
         taskSheetRepository.deleteById(id);
     }
 
@@ -60,7 +66,8 @@ public class TaskSheetService {
                     t.getId(), t.getTitle(), t.getDescription(), t.getDifficulty(),
                     t.getTopic() != null ? t.getTopic().getName() : null,
                     t.getTopic() != null ? t.getTopic().getColor() : null,
-                    t.getPlatformLink(), t.getXpReward(), completed
+                    t.getPlatformLink(), t.getXpReward(), completed,
+                    t.getCompanyTags(), t.getPatternTags()
             );
         }).collect(Collectors.toList());
 

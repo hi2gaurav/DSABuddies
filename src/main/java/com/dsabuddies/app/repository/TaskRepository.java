@@ -9,4 +9,5 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     List<Task> findByTaskSheetId(Long sheetId);
     List<Task> findByTopicId(Long topicId);
     long countByTaskSheetId(Long sheetId);
+    long countByTopicId(Long topicId);
 }

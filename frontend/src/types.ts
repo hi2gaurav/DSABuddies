@@ -45,6 +45,8 @@ export interface Task {
   platformLink: string;
   xpReward: number;
   completed: boolean;
+  companyTags?: string;
+  patternTags?: string;
 }
 
 export interface TaskCompletionEntry {
@@ -129,4 +131,80 @@ export interface DailyContent {
   databaseQuestions: InterviewQuestion[];
   csSubjectsQuestions: InterviewQuestion[];
 }
+
+export interface ReviewItem {
+  id: number;
+  taskId: number;
+  taskTitle: string;
+  taskDescription: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  topicName: string;
+  topicColor: string;
+  platformLink: string;
+  xpReward: number;
+  nextReviewDate: string;
+  intervalDays: number;
+  easeFactor: number;
+  reviewCount: number;
+  lastReviewedAt: string;
+}
+
+export interface Bookmark {
+  id: number;
+  taskId: number;
+  taskTitle: string;
+  taskDescription: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  topicName: string;
+  topicColor: string;
+  platformLink: string;
+  xpReward: number;
+  createdAt: string;
+}
+
+export interface UserNote {
+  id: number;
+  taskId: number;
+  taskTitle: string;
+  content: string;
+  codeSnippet: string;
+  language: string;
+  updatedAt: string;
+}
+
+export interface SaveNoteRequest {
+  content?: string;
+  codeSnippet?: string;
+  language?: string;
+}
+
+export interface WeakTopic {
+  topicId: number;
+  topicName: string;
+  topicColor: string;
+  totalProblems: number;
+  solvedProblems: number;
+  completionPercentage: number;
+  averageRating: number | null;
+  recommendation: string;
+}
+
+export interface AdaptiveSuggestion {
+  taskId: number;
+  title: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  topicName: string;
+  topicColor: string;
+  platformLink: string;
+  xpReward: number;
+  reason: string;
+}
+
+export interface PatternStat {
+  pattern: string;
+  totalCount: number;
+  solvedCount: number;
+  masteryPercentage: number;
+}
+
 

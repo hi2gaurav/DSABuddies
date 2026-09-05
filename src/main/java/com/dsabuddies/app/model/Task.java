@@ -31,6 +31,9 @@ public class Task {
 
     private int xpReward;
 
+    private String companyTags; // e.g. "Amazon,Google,Flipkart"
+    private String patternTags; // e.g. "Two Pointer,Sliding Window,DP"
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_sheet_id")
     private TaskSheet taskSheet;

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, Trophy, UserCircle, Settings, Code, Sparkles } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Trophy, UserCircle, Settings, Code, Sparkles, Brain, Bookmark as BookmarkIcon } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
+import { api } from '../../lib/api';
 import { clsx } from 'clsx';
 
 interface SidebarProps {
@@ -12,10 +13,21 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const { user } = useAuth();
+  const [dueCount, setDueCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (user) {
+      api.getDueReviewCount()
+        .then(res => setDueCount(res.dueCount))
+        .catch(() => {});
+    }
+  }, [user]);
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: ListTodo },
+    { name: 'Reviews', path: '/reviews', icon: Brain, badge: dueCount > 0 ? dueCount : undefined },
+    { name: 'Bookmarks', path: '/bookmarks', icon: BookmarkIcon },
     { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
     { name: 'Profile', path: '/profile', icon: UserCircle },
   ];
@@ -71,6 +83,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
                     isActive ? "text-white" : "text-gray-400 group-hover:text-blue-500 dark:group-hover:text-blue-400"
                   )} />
                   <span className="flex-1">{item.name}</span>
+                  {item.badge !== undefined && (
+                    <span className={clsx(
+                      "px-2 py-0.5 rounded-full text-[10px] font-black",
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-purple-100 text-purple-700 dark:bg-purple-900/60 dark:text-purple-300 animate-pulse"
+                    )}>
+                      {item.badge}
+                    </span>
+                  )}
                   {isActive && (
                     <motion.div
                       layoutId="activePill"

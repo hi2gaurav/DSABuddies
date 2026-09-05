@@ -9,8 +9,10 @@ import CoinRewardOverlay from '../components/common/CoinRewardOverlay';
 import SolutionModal from '../components/tasks/SolutionModal';
 import AnimatedNumber from '../components/common/AnimatedNumber';
 import { motion } from 'framer-motion';
+import BookmarkButton from '../components/common/BookmarkButton';
+import NoteModal from '../components/common/NoteModal';
 import { useToast } from '../components/ui/Toast';
-import { ArrowLeft, Calendar, ExternalLink, Star, CheckCircle2, Circle, Search } from 'lucide-react';
+import { ArrowLeft, Calendar, ExternalLink, Star, CheckCircle2, Circle, Search, FileText } from 'lucide-react';
 import { toSafeUrl } from '../lib/security';
 
 const TaskSheetDetailPage: React.FC = () => {
@@ -22,6 +24,7 @@ const TaskSheetDetailPage: React.FC = () => {
   const [difficultyFilter, setDifficultyFilter] = useState<'ALL' | 'EASY' | 'MEDIUM' | 'HARD'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SOLVED' | 'UNSOLVED'>('ALL');
   const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<Task | null>(null);
+  const [selectedNoteTask, setSelectedNoteTask] = useState<{ id: number; title: string } | null>(null);
   const [rewardXp, setRewardXp] = useState<number | null>(null);
   const { show } = useToast();
 
@@ -246,29 +249,44 @@ const TaskSheetDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* Status Action Button */}
-              <motion.button
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.94 }}
-                onClick={() => handleTaskClick(task)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 flex-shrink-0 transition-all shadow-xs ${
-                  task.completed
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
-                    : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400'
-                }`}
-              >
-                {task.completed ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 fill-white text-emerald-500" />
-                    <span>Completed ✓</span>
-                  </>
-                ) : (
-                  <>
-                    <Circle className="w-4 h-4 text-gray-400" />
-                    <span>Mark Solved</span>
-                  </>
-                )}
-              </motion.button>
+              {/* Status Action Buttons */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <BookmarkButton taskId={task.id} />
+
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  type="button"
+                  onClick={() => setSelectedNoteTask({ id: task.id, title: task.title })}
+                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Personal Notes & Code"
+                >
+                  <FileText className="w-4 h-4" />
+                </motion.button>
+
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => handleTaskClick(task)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs ${
+                    task.completed
+                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+                      : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400'
+                  }`}
+                >
+                  {task.completed ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 fill-white text-emerald-500" />
+                      <span>Completed ✓</span>
+                    </>
+                  ) : (
+                    <>
+                      <Circle className="w-4 h-4 text-gray-400" />
+                      <span>Mark Solved</span>
+                    </>
+                  )}
+                </motion.button>
+              </div>
             </motion.div>
           ))
         ) : (
@@ -291,6 +309,16 @@ const TaskSheetDetailPage: React.FC = () => {
         <CoinRewardOverlay
           xp={rewardXp}
           onComplete={() => setRewardXp(null)}
+        />
+      )}
+
+      {/* Personal Note Modal */}
+      {selectedNoteTask && (
+        <NoteModal
+          taskId={selectedNoteTask.id}
+          taskTitle={selectedNoteTask.title}
+          isOpen={selectedNoteTask !== null}
+          onClose={() => setSelectedNoteTask(null)}
         />
       )}
     </div>

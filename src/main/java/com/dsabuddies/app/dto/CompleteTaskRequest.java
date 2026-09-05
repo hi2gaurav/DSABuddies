@@ -9,5 +9,11 @@ public record CompleteTaskRequest(
     String solutionLink,
 
     @Size(max = 2000, message = "Notes must not exceed 2000 characters")
-    String notes
+    String notes,
+
+    Integer timeSpentSeconds,
+
+    @jakarta.validation.constraints.Min(value = 1, message = "Self rating must be at least 1")
+    @jakarta.validation.constraints.Max(value = 5, message = "Self rating cannot exceed 5")
+    Integer selfRating
 ) {}
