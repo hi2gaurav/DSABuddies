@@ -5,7 +5,7 @@ import { TaskSheet, Task } from '../types';
 import Badge from '../components/ui/Badge';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
+import CoinRewardOverlay from '../components/common/CoinRewardOverlay';
 import SolutionModal from '../components/tasks/SolutionModal';
 import { useToast } from '../components/ui/Toast';
 import { ArrowLeft, Calendar, ExternalLink, Star, CheckCircle2, Circle, Search } from 'lucide-react';
@@ -20,6 +20,7 @@ const TaskSheetDetailPage: React.FC = () => {
   const [difficultyFilter, setDifficultyFilter] = useState<'ALL' | 'EASY' | 'MEDIUM' | 'HARD'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'SOLVED' | 'UNSOLVED'>('ALL');
   const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<Task | null>(null);
+  const [rewardXp, setRewardXp] = useState<number | null>(null);
   const { show } = useToast();
 
   const fetchSheet = async () => {
@@ -56,6 +57,7 @@ const TaskSheetDetailPage: React.FC = () => {
     if (!selectedTaskForCompletion) return;
     try {
       await api.completeTask(selectedTaskForCompletion.id, { solutionLink, notes });
+      setRewardXp(selectedTaskForCompletion.xpReward);
       show(`Task completed! +${selectedTaskForCompletion.xpReward} XP earned ⭐`, 'success');
       fetchSheet();
     } catch (error) {
@@ -96,11 +98,6 @@ const TaskSheetDetailPage: React.FC = () => {
           <ArrowLeft className="w-4 h-4" />
           <span>Back to All Sheets</span>
         </button>
-
-        <ShareToWhatsApp
-          title="Share Sheet on WhatsApp"
-          message={`📋 DSA Buddies Sheet: "${sheet.title}"\n🎯 Progress: ${completedTasks}/${totalTasks} Problems (${progressPercent}%)\n⭐ XP Earned: ${earnedXp}/${totalXp}\nLet's crush this together team!`}
-        />
       </div>
 
       {/* Sheet Overview Card */}
@@ -130,7 +127,7 @@ const TaskSheetDetailPage: React.FC = () => {
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-amber-500">
-                {earnedXp}
+                {earnedXp}/{totalXp}
               </div>
               <div className="text-xs text-gray-500 dark:text-gray-400">XP Earned</div>
             </div>
@@ -208,28 +205,12 @@ const TaskSheetDetailPage: React.FC = () => {
           filteredTasks.map((task) => (
             <div
               key={task.id}
-              className={`p-4 sm:p-5 transition-colors flex items-center gap-4 ${
+              className={`p-4 sm:p-5 transition-colors flex items-center justify-between gap-4 ${
                 task.completed
                   ? 'bg-emerald-500/5 dark:bg-emerald-950/10'
                   : 'hover:bg-gray-50/80 dark:hover:bg-slate-800/40'
               }`}
             >
-              <button
-                onClick={() => handleTaskClick(task)}
-                title={task.completed ? 'Click to unmark' : 'Click to complete problem'}
-                className={`w-7 h-7 rounded-lg flex items-center justify-center border-2 flex-shrink-0 transition-all ${
-                  task.completed
-                    ? 'bg-emerald-500 border-emerald-500 text-white shadow-sm shadow-emerald-500/30'
-                    : 'border-gray-300 dark:border-gray-600 hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-800'
-                }`}
-              >
-                {task.completed ? (
-                  <CheckCircle2 className="w-5 h-5 fill-white text-emerald-500" />
-                ) : (
-                  <Circle className="w-5 h-5 text-transparent" />
-                )}
-              </button>
-
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <a
@@ -259,6 +240,28 @@ const TaskSheetDetailPage: React.FC = () => {
                   </span>
                 </div>
               </div>
+
+              {/* Status Action Button */}
+              <button
+                onClick={() => handleTaskClick(task)}
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 flex-shrink-0 transition-all shadow-sm ${
+                  task.completed
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20 active:scale-95'
+                    : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95'
+                }`}
+              >
+                {task.completed ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 fill-white text-emerald-500" />
+                    <span>Completed ✓</span>
+                  </>
+                ) : (
+                  <>
+                    <Circle className="w-4 h-4 text-gray-400" />
+                    <span>Mark Solved</span>
+                  </>
+                )}
+              </button>
             </div>
           ))
         ) : (
@@ -275,6 +278,14 @@ const TaskSheetDetailPage: React.FC = () => {
         onClose={() => setSelectedTaskForCompletion(null)}
         onSubmit={handleModalSubmit}
       />
+
+      {/* Coin Reward Animation */}
+      {rewardXp !== null && (
+        <CoinRewardOverlay
+          xp={rewardXp}
+          onComplete={() => setRewardXp(null)}
+        />
+      )}
     </div>
   );
 };

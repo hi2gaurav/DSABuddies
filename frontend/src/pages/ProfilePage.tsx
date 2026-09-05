@@ -9,7 +9,6 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ActivityHeatmap from '../components/profile/ActivityHeatmap';
 import TopicProgressCard from '../components/profile/TopicProgressCard';
 import AchievementsList from '../components/profile/AchievementsList';
-import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
 import { Calendar, Flame, Star, Trophy, Target } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
@@ -82,10 +81,6 @@ const ProfilePage: React.FC = () => {
               <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700/50 px-3.5 py-1.5 rounded-lg text-xs">
                 <Calendar className="w-3.5 h-3.5" /> Joined {joinDate}
               </div>
-              <ShareToWhatsApp
-                title="Share Stats"
-                message={`🏆 DSA Buddies Member Stats:\n👤 ${profile.name}\n⭐ Total XP: ${profile.totalXp}\n🔥 Current Streak: ${profile.currentStreak} Days\n✅ Problems Solved: ${totalSolved}\n\nJoin our community tracker!`}
-              />
             </div>
           </div>
         </div>

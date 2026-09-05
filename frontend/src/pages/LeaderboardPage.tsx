@@ -5,7 +5,6 @@ import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
 import { Trophy, Star, Flame, Search } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -38,23 +37,6 @@ const LeaderboardPage: React.FC = () => {
     );
   }, [leaders, searchQuery]);
 
-  const whatsappMessage = useMemo(() => {
-    const top3 = leaders.slice(0, 3);
-    let msg = '🏆 *DSA Buddies Community Leaderboard Update!*\n\n';
-    if (top3.length > 0) {
-      top3.forEach((l, idx) => {
-        const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉';
-        msg += `${medal} *#${l.rank} ${l.userName}* — ${l.totalXp} XP (${l.currentStreak}🔥)\n`;
-      });
-    }
-    const myEntry = leaders.find((l) => l.userId === user?.id);
-    if (myEntry) {
-      msg += `\n👤 My Standing: *#${myEntry.rank}* with ${myEntry.totalXp} XP!\n`;
-    }
-    msg += '\nKeep grinding team! 💪';
-    return msg;
-  }, [leaders, user]);
-
   const getRankBadge = (rank: number) => {
     if (rank === 1) return <div className="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/40 flex items-center justify-center text-xl shadow-sm border border-yellow-300 dark:border-yellow-700/60">🥇</div>;
     if (rank === 2) return <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl shadow-sm border border-slate-300 dark:border-slate-600">🥈</div>;
@@ -77,10 +59,6 @@ const LeaderboardPage: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
-          <ShareToWhatsApp
-            title="Post to WhatsApp"
-            message={whatsappMessage}
-          />
 
           <div className="bg-gray-100 dark:bg-slate-800 p-1 rounded-xl inline-flex text-xs font-medium">
             <button 

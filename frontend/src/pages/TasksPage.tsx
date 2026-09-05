@@ -6,7 +6,6 @@ import { useAuth } from '../hooks/useAuth';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
-import ShareToWhatsApp from '../components/common/ShareToWhatsApp';
 import { Calendar, CheckCircle2, ChevronRight, Search, Plus } from 'lucide-react';
 
 const TasksPage: React.FC = () => {
@@ -62,11 +61,6 @@ const TasksPage: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3 flex-wrap">
-          <ShareToWhatsApp
-            title="Share Sheets"
-            message={`📚 Check out the latest DSA problem sheets on DSA Buddies!\nSolve problems, build your streak, and climb the leaderboard.`}
-          />
-
           {user?.role === 'ROLE_ADMIN' && (
             <button 
               onClick={() => navigate('/admin')}

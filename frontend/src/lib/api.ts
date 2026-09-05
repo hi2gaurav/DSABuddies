@@ -1,34 +1,32 @@
-import { User, DashboardData, TaskSheet, Task, TaskCompletionEntry, LeaderboardEntry, Topic, TopicProgress } from '../types';
+import { User, DashboardData, TaskSheet, Task, TaskCompletionEntry, LeaderboardEntry, Topic, TopicProgress, DailyContent } from '../types';
 
 const API_BASE = '';
 
-function getCsrfToken(): string | null {
-  const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
 async function fetchApi<T>(url: string, options?: RequestInit): Promise<T> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    ...(options?.headers as Record<string, string>),
-  };
-
-  const method = options?.method?.toUpperCase() || 'GET';
-  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-    const csrfToken = getCsrfToken();
-    if (csrfToken) {
-      headers['X-XSRF-TOKEN'] = csrfToken;
-    }
-  }
-
   const res = await fetch(`${API_BASE}${url}`, {
     ...options,
     credentials: 'include',
-    headers,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
   });
 
   if (!res.ok) {
-    throw new Error(`API error: ${res.status}`);
+    let errorMsg = `API error: ${res.status}`;
+    try {
+      const errData = await res.json();
+      if (errData.details && typeof errData.details === 'object') {
+        errorMsg = Object.values(errData.details).join(', ');
+      } else if (errData.error) {
+        errorMsg = errData.error;
+      } else if (errData.message) {
+        errorMsg = errData.message;
+      }
+    } catch (_) {
+      // ignore JSON parse error for error body
+    }
+    throw new Error(errorMsg);
   }
 
   const contentType = res.headers.get('content-type');
@@ -71,6 +69,7 @@ export const api = {
   // Admin
   getMembers: () => fetchApi<User[]>('/api/admin/members'),
   updateMemberRole: (id: number, role: string) => fetchApi<void>(`/api/admin/members/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+  getDailyContent: () => fetchApi<DailyContent>('/api/admin/daily-content'),
   
   // Topics
   getTopics: () => fetchApi<Topic[]>('/api/topics'),

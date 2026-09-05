@@ -46,10 +46,10 @@ const AdminPage: React.FC = () => {
     if (!confirm('Are you sure you want to delete this sheet and all its tasks?')) return;
     try {
       await api.deleteTaskSheet(id);
-      show('Task sheet deleted', 'success');
+      show('Task sheet deleted successfully', 'success');
       fetchSheets();
-    } catch (e) {
-      show('Error deleting sheet', 'error');
+    } catch (e: any) {
+      show(e.message || 'Error deleting sheet', 'error');
     }
   };
 
@@ -57,27 +57,62 @@ const AdminPage: React.FC = () => {
   const [sheetForm, setSheetForm] = useState({ title: '', description: '', startDate: '', endDate: '', sheetType: 'DAILY' });
   const handleCreateSheet = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!sheetForm.title.trim()) {
+      show('Please enter a sheet title', 'error');
+      return;
+    }
+    if (!sheetForm.startDate || !sheetForm.endDate) {
+      show('Please select valid start and end dates', 'error');
+      return;
+    }
     try {
-      await api.createTaskSheet(sheetForm);
-      show('Task sheet created!', 'success');
+      await api.createTaskSheet({
+        title: sheetForm.title.trim(),
+        description: sheetForm.description.trim() || sheetForm.title.trim(),
+        startDate: sheetForm.startDate,
+        endDate: sheetForm.endDate,
+        sheetType: sheetForm.sheetType,
+      });
+      show('Task sheet created successfully!', 'success');
       setSheetForm({ title: '', description: '', startDate: '', endDate: '', sheetType: 'DAILY' });
       fetchSheets();
       setActiveTab('sheets');
-    } catch (e) {
-      show('Error creating sheet', 'error');
+    } catch (e: any) {
+      show(e.message || 'Error creating sheet', 'error');
     }
   };
 
-  const [taskForm, setTaskForm] = useState({ taskSheetId: '', title: '', description: '', difficulty: 'EASY', topicId: '', platformLink: '', xpReward: 10 });
+  const [taskForm, setTaskForm] = useState({ taskSheetId: '', title: '', description: '', difficulty: 'EASY', topicId: '', platformLink: '', xpReward: 100 });
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!taskForm.taskSheetId) {
+      show('Please select a task sheet', 'error');
+      return;
+    }
+    if (!taskForm.topicId) {
+      show('Please select a topic', 'error');
+      return;
+    }
+    if (!taskForm.title.trim()) {
+      show('Please enter a task title', 'error');
+      return;
+    }
     try {
-      await api.createTask(taskForm);
-      show('Task created!', 'success');
-      setTaskForm({ ...taskForm, title: '', description: '', platformLink: '', xpReward: 10 });
+      await api.createTask({
+        taskSheetId: Number(taskForm.taskSheetId),
+        topicId: Number(taskForm.topicId),
+        title: taskForm.title.trim(),
+        description: taskForm.description.trim(),
+        difficulty: taskForm.difficulty,
+        platformLink: taskForm.platformLink.trim() || 'https://leetcode.com',
+        xpReward: Number(taskForm.xpReward) || 100,
+      });
+      show('Task created successfully!', 'success');
+      setTaskForm({ ...taskForm, title: '', description: '', platformLink: '', xpReward: 100 });
       fetchSheets();
-    } catch (e) {
-      show('Error creating task', 'error');
+      setActiveTab('sheets');
+    } catch (e: any) {
+      show(e.message || 'Error creating task', 'error');
     }
   };
 

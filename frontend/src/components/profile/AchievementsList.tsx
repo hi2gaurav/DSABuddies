@@ -1,6 +1,5 @@
 import React from 'react';
 import Card from '../ui/Card';
-import ShareToWhatsApp from '../common/ShareToWhatsApp';
 import { Award, Flame, Zap, Trophy, Target, ShieldCheck } from 'lucide-react';
 import { User } from '../../types';
 
@@ -108,16 +107,10 @@ export const AchievementsList: React.FC<AchievementsListProps> = ({ user, proble
                   {item.icon}
                 </div>
                 {item.unlocked ? (
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                      <ShieldCheck className="w-3 h-3" />
-                      <span>Unlocked</span>
-                    </span>
-                    <ShareToWhatsApp
-                      variant="badge"
-                      message={`🏆 Milestone Unlocked on DSA Buddies!\nBadge: "${item.title}" - ${item.description}\nMy Total XP: ${user.totalXp} ⭐`}
-                    />
-                  </div>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                    <ShieldCheck className="w-3 h-3" />
+                    <span>Unlocked</span>
+                  </span>
                 ) : (
                   <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">
                     {item.current}/{item.target}

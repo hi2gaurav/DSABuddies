@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, Sun, Moon, Bell, LogOut, User as UserIcon } from 'lucide-react';
+import { Menu, Sun, Moon, Bell, LogOut, User as UserIcon, Flame } from 'lucide-react';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -41,9 +41,21 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
+          {/* User Streak Badge */}
+          {user && (
+            <div 
+              className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-bold shadow-xs hover:border-orange-500/40 transition-all cursor-default"
+              title={`Active Streak: ${user.currentStreak || 0} consecutive days`}
+            >
+              <Flame className="w-4 h-4 fill-orange-500 text-orange-500 animate-pulse" />
+              <span>{user.currentStreak || 0} {user.currentStreak === 1 ? 'Day' : 'Days'}</span>
+            </div>
+          )}
+
           <button 
             onClick={toggleTheme}
             className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
             {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
           </button>

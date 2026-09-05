@@ -15,6 +15,9 @@ public interface TaskCompletionRepository extends JpaRepository<TaskCompletion, 
     long countByUserId(Long userId);
     long countByUserIdAndTaskTaskSheetId(Long userId, Long sheetId);
     List<TaskCompletion> findByTaskTaskSheetIdAndUserId(Long sheetId, Long userId);
+    void deleteByTaskTaskSheetId(Long sheetId);
+    void deleteByTaskId(Long taskId);
+    List<TaskCompletion> findByTaskId(Long taskId);
 
     @Query("SELECT new com.dsabuddies.app.dto.LeaderboardEntryDto(0, u.id, u.name, u.avatarUrl, u.totalXp, u.currentStreak, CAST(COUNT(tc) AS int)) " +
            "FROM User u LEFT JOIN TaskCompletion tc ON tc.user = u " +

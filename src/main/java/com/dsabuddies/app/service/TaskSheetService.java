@@ -47,7 +47,9 @@ public class TaskSheetService {
                 .stream().map(s -> toDto(s, currentUserId)).collect(Collectors.toList());
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteTaskSheet(Long id) {
+        taskCompletionRepository.deleteByTaskTaskSheetId(id);
         taskSheetRepository.deleteById(id);
     }
 

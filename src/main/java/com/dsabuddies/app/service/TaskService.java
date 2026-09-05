@@ -45,7 +45,9 @@ public class TaskService {
                 .map(t -> toDto(t, currentUserId)).collect(Collectors.toList());
     }
 
+    @org.springframework.transaction.annotation.Transactional
     public void deleteTask(Long id) {
+        taskCompletionRepository.deleteByTaskId(id);
         taskRepository.deleteById(id);
     }
 

@@ -83,3 +83,50 @@ export interface TopicProgress {
   total: number;
   percentage: number;
 }
+
+export interface LeetCodeProblem {
+  id: string;
+  title: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+  topic: string;
+  url: string;
+  problemSummary: string;
+  optimalApproach: string;
+  timeComplexity: string;
+  spaceComplexity: string;
+}
+
+export interface DesignTopic {
+  id: string;
+  title: string;
+  type: 'LLD' | 'HLD';
+  difficulty: string;
+  description: string;
+  coreRequirements: string[];
+  designPatternsOrComponents: string[];
+  architectureSummary: string;
+}
+
+export interface InterviewQuestion {
+  id: number;
+  category: string;
+  topic: string;
+  question: string;
+  answer: string;
+  keyPoints?: string[];
+  codeSnippet?: string;
+}
+
+export interface DailyContent {
+  date: string;
+  dayOfYear: number;
+  quoteOfTheDay: string;
+  leetCodeProblem: LeetCodeProblem;
+  lldTopic: DesignTopic;
+  hldTopic: DesignTopic;
+  javaQuestions: InterviewQuestion[];
+  springBootQuestions: InterviewQuestion[];
+  databaseQuestions: InterviewQuestion[];
+  csSubjectsQuestions: InterviewQuestion[];
+}
+
