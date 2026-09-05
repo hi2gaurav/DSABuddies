@@ -15,9 +15,12 @@ import SolutionModal from '../components/tasks/SolutionModal';
 import WeakAreaWidget from '../components/dashboard/WeakAreaWidget';
 import BookmarkButton from '../components/common/BookmarkButton';
 import NoteModal from '../components/common/NoteModal';
+import BadgeCelebrationModal from '../components/common/BadgeCelebrationModal';
+import LevelUpModal from '../components/common/LevelUpModal';
 import { ExternalLink, Star, Search, CheckCircle2, Circle, Trophy, Target, Zap, FileText } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { toSafeUrl } from '../lib/security';
+import { Badge as BadgeType } from '../types';
 
 const DashboardPage: React.FC = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -27,6 +30,8 @@ const DashboardPage: React.FC = () => {
   const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<Task | null>(null);
   const [selectedNoteTask, setSelectedNoteTask] = useState<{ id: number; title: string } | null>(null);
   const [rewardXp, setRewardXp] = useState<number | null>(null);
+  const [newBadges, setNewBadges] = useState<BadgeType[]>([]);
+  const [levelUpData, setLevelUpData] = useState<{ level: number; title: string } | null>(null);
   const { user } = useAuth();
   const { show } = useToast();
 
@@ -64,9 +69,15 @@ const DashboardPage: React.FC = () => {
   const handleModalSubmit = async (solutionLink: string, notes: string) => {
     if (!selectedTaskForCompletion) return;
     try {
-      await api.completeTask(selectedTaskForCompletion.id, { solutionLink, notes });
+      const res = await api.completeTask(selectedTaskForCompletion.id, { solutionLink, notes });
       setRewardXp(selectedTaskForCompletion.xpReward);
       show(`Task completed! +${selectedTaskForCompletion.xpReward} XP earned ⭐`, 'success');
+      if (res.levelUp) {
+        setLevelUpData({ level: res.newLevel || 1, title: res.newTitle || 'Novice' });
+      }
+      if (res.newBadges && res.newBadges.length > 0) {
+        setNewBadges(res.newBadges);
+      }
       fetchDashboard();
     } catch (error) {
       show('Failed to complete task', 'error');
@@ -98,9 +109,12 @@ const DashboardPage: React.FC = () => {
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-purple-600/10 border border-blue-500/20 shadow-xs backdrop-blur-xs"
       >
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black tracking-wider uppercase inline-flex items-center gap-1">
               <Zap className="w-3 h-3 fill-current" /> Daily Prep
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 text-xs font-black tracking-wider inline-flex items-center gap-1">
+              Lv. {user?.level || 1} • {user?.title || 'Novice'}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
@@ -379,6 +393,25 @@ const DashboardPage: React.FC = () => {
         <CoinRewardOverlay
           xp={rewardXp}
           onComplete={() => setRewardXp(null)}
+        />
+      )}
+
+      {/* Level Up Celebration Modal */}
+      {levelUpData && (
+        <LevelUpModal
+          level={levelUpData.level}
+          title={levelUpData.title}
+          isOpen={levelUpData !== null}
+          onClose={() => setLevelUpData(null)}
+        />
+      )}
+
+      {/* Badge Celebration Modal */}
+      {newBadges.length > 0 && (
+        <BadgeCelebrationModal
+          badges={newBadges}
+          isOpen={newBadges.length > 0}
+          onClose={() => setNewBadges([])}
         />
       )}
     </div>

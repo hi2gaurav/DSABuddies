@@ -8,6 +8,12 @@ export interface User {
   maxStreak: number;
   totalXp: number;
   createdAt: string;
+  level?: number;
+  title?: string;
+  dailyGoal?: number;
+  consistencyScore?: number;
+  streakFreezeAvailable?: boolean;
+  streakFreezeUsedDate?: string | null;
 }
 
 export interface DashboardData {
@@ -59,6 +65,10 @@ export interface TaskCompletionEntry {
   completedAt: string;
   solutionLink: string;
   notes: string;
+  newBadges?: Badge[];
+  levelUp?: boolean;
+  newLevel?: number;
+  newTitle?: string;
 }
 
 export interface LeaderboardEntry {
@@ -69,6 +79,8 @@ export interface LeaderboardEntry {
   totalXp: number;
   currentStreak: number;
   tasksCompleted: number;
+  level?: number;
+  title?: string;
 }
 
 export interface Topic {
@@ -206,5 +218,30 @@ export interface PatternStat {
   solvedCount: number;
   masteryPercentage: number;
 }
+
+export interface Badge {
+  id: number;
+  name: string;
+  description: string;
+  icon: string;
+  category: string;
+  criteriaType: string;
+  criteriaValue: number;
+  xpReward: number;
+  rarity: 'COMMON' | 'RARE' | 'EPIC' | 'LEGENDARY';
+  earned: boolean;
+  earnedAt?: string;
+  progressPercent: number;
+}
+
+export interface LeaderboardSnapshot {
+  id: number;
+  periodType: 'WEEKLY' | 'MONTHLY';
+  periodStart: string;
+  periodEnd: string;
+  snapshotData: string;
+  createdAt: string;
+}
+
 
 

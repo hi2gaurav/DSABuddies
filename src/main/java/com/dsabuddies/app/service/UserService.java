@@ -86,11 +86,38 @@ public class UserService {
                 if (user.getCurrentStreak() > user.getMaxStreak()) {
                     user.setMaxStreak(user.getCurrentStreak());
                 }
+            } else if (daysBetween == 2 && user.isStreakFreezeAvailable()) {
+                // Streak freeze saves the streak!
+                user.setStreakFreezeAvailable(false);
+                user.setStreakFreezeUsedDate(today);
+                user.setCurrentStreak(user.getCurrentStreak() + 1);
+                if (user.getCurrentStreak() > user.getMaxStreak()) {
+                    user.setMaxStreak(user.getCurrentStreak());
+                }
             } else if (daysBetween > 1) {
                 user.setCurrentStreak(1);
             }
         }
         user.setLastActiveDate(today);
+        userRepository.save(user);
+    }
+
+    @Transactional
+    public boolean useStreakFreeze(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow();
+        if (!user.isStreakFreezeAvailable()) {
+            return false;
+        }
+        user.setStreakFreezeAvailable(false);
+        user.setStreakFreezeUsedDate(LocalDate.now());
+        userRepository.save(user);
+        return true;
+    }
+
+    @Transactional
+    public void setDailyGoal(Long userId, int dailyGoal) {
+        User user = userRepository.findById(userId).orElseThrow();
+        user.setDailyGoal(Math.max(1, Math.min(20, dailyGoal)));
         userRepository.save(user);
     }
 
@@ -104,7 +131,13 @@ public class UserService {
                 user.getCurrentStreak(),
                 user.getMaxStreak(),
                 user.getTotalXp(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getLevel(),
+                user.getTitle(),
+                user.getDailyGoal(),
+                user.getConsistencyScore(),
+                user.isStreakFreezeAvailable(),
+                user.getStreakFreezeUsedDate()
         );
     }
 }

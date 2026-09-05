@@ -102,5 +102,17 @@ export const api = {
   getWeakTopics: () => fetchApi<import('../types').WeakTopic[]>('/api/analytics/weak-topics'),
   getAdaptiveSuggestions: () => fetchApi<import('../types').AdaptiveSuggestion[]>('/api/analytics/suggestions'),
   getPatternStats: () => fetchApi<import('../types').PatternStat[]>('/api/analytics/patterns'),
+
+  // Badges & Achievements
+  getBadges: () => fetchApi<import('../types').Badge[]>('/api/badges'),
+  getMyBadges: () => fetchApi<import('../types').Badge[]>('/api/badges/mine'),
+  getUserBadges: (userId: number) => fetchApi<import('../types').Badge[]>(`/api/badges/user/${userId}`),
+  updateSettings: (data: { dailyGoal?: number; useStreakFreeze?: boolean }) => fetchApi<User>('/api/profile/settings', {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+
+  // Leaderboard History
+  getLeaderboardHistory: (period?: string) => fetchApi<import('../types').LeaderboardSnapshot[]>(`/api/leaderboard/history?period=${period || 'weekly'}`),
 };
 

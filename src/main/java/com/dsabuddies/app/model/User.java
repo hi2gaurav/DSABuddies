@@ -41,6 +41,23 @@ public class User {
     private int totalXp = 0;
 
     @Builder.Default
+    private int level = 1;
+
+    @Builder.Default
+    private String title = "Novice";
+
+    @Builder.Default
+    private int dailyGoal = 3;
+
+    @Builder.Default
+    private double consistencyScore = 0.0;
+
+    @Builder.Default
+    private boolean streakFreezeAvailable = false;
+
+    private LocalDate streakFreezeUsedDate;
+
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @PrePersist

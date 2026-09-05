@@ -54,10 +54,33 @@ public class ProfileController {
                     userDto.currentStreak(),
                     userDto.maxStreak(),
                     userDto.totalXp(),
-                    userDto.createdAt()
+                    userDto.createdAt(),
+                    userDto.level(),
+                    userDto.title(),
+                    userDto.dailyGoal(),
+                    userDto.consistencyScore(),
+                    userDto.streakFreezeAvailable(),
+                    userDto.streakFreezeUsedDate()
             );
         }
         return ResponseEntity.ok(userDto);
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/settings")
+    public ResponseEntity<UserDto> updateSettings(
+            @org.springframework.web.bind.annotation.RequestBody com.dsabuddies.app.dto.UpdateSettingsRequest request,
+            @AuthenticationPrincipal OAuth2User principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).build();
+        }
+        User user = userService.getOrCreateUser(principal);
+        if (request != null && request.dailyGoal() != null) {
+            userService.setDailyGoal(user.getId(), request.dailyGoal());
+        }
+        if (request != null && Boolean.TRUE.equals(request.useStreakFreeze())) {
+            userService.useStreakFreeze(user.getId());
+        }
+        return ResponseEntity.ok(userService.getUserById(user.getId()));
     }
 
     @GetMapping("/{id}/topics")

@@ -11,9 +11,12 @@ import AnimatedNumber from '../components/common/AnimatedNumber';
 import { motion } from 'framer-motion';
 import BookmarkButton from '../components/common/BookmarkButton';
 import NoteModal from '../components/common/NoteModal';
+import BadgeCelebrationModal from '../components/common/BadgeCelebrationModal';
+import LevelUpModal from '../components/common/LevelUpModal';
 import { useToast } from '../components/ui/Toast';
 import { ArrowLeft, Calendar, ExternalLink, Star, CheckCircle2, Circle, Search, FileText } from 'lucide-react';
 import { toSafeUrl } from '../lib/security';
+import { Badge as BadgeType } from '../types';
 
 const TaskSheetDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +29,8 @@ const TaskSheetDetailPage: React.FC = () => {
   const [selectedTaskForCompletion, setSelectedTaskForCompletion] = useState<Task | null>(null);
   const [selectedNoteTask, setSelectedNoteTask] = useState<{ id: number; title: string } | null>(null);
   const [rewardXp, setRewardXp] = useState<number | null>(null);
+  const [newBadges, setNewBadges] = useState<BadgeType[]>([]);
+  const [levelUpData, setLevelUpData] = useState<{ level: number; title: string } | null>(null);
   const { show } = useToast();
 
   const fetchSheet = async () => {
@@ -61,9 +66,15 @@ const TaskSheetDetailPage: React.FC = () => {
   const handleModalSubmit = async (solutionLink: string, notes: string) => {
     if (!selectedTaskForCompletion) return;
     try {
-      await api.completeTask(selectedTaskForCompletion.id, { solutionLink, notes });
+      const res = await api.completeTask(selectedTaskForCompletion.id, { solutionLink, notes });
       setRewardXp(selectedTaskForCompletion.xpReward);
       show(`Task completed! +${selectedTaskForCompletion.xpReward} XP earned ⭐`, 'success');
+      if (res.levelUp) {
+        setLevelUpData({ level: res.newLevel || 1, title: res.newTitle || 'Novice' });
+      }
+      if (res.newBadges && res.newBadges.length > 0) {
+        setNewBadges(res.newBadges);
+      }
       fetchSheet();
     } catch (error) {
       show('Failed to complete task', 'error');
@@ -319,6 +330,25 @@ const TaskSheetDetailPage: React.FC = () => {
           taskTitle={selectedNoteTask.title}
           isOpen={selectedNoteTask !== null}
           onClose={() => setSelectedNoteTask(null)}
+        />
+      )}
+
+      {/* Level Up Celebration Modal */}
+      {levelUpData && (
+        <LevelUpModal
+          level={levelUpData.level}
+          title={levelUpData.title}
+          isOpen={levelUpData !== null}
+          onClose={() => setLevelUpData(null)}
+        />
+      )}
+
+      {/* Badge Celebration Modal */}
+      {newBadges.length > 0 && (
+        <BadgeCelebrationModal
+          badges={newBadges}
+          isOpen={newBadges.length > 0}
+          onClose={() => setNewBadges([])}
         />
       )}
     </div>
