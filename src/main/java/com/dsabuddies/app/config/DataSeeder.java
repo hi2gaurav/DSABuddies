@@ -20,13 +20,27 @@ public class DataSeeder implements CommandLineRunner {
     private final TopicRepository topicRepository;
     private final TaskSheetRepository taskSheetRepository;
     private final TaskRepository taskRepository;
+    private final com.dsabuddies.app.repository.UserRepository userRepository;
 
     @Override
     public void run(String... args) throws Exception {
+        cleanupAdminRoles();
         if (topicRepository.count() == 0) {
             seedTopics();
             seedTasks();
         }
+    }
+
+    private void cleanupAdminRoles() {
+        List<com.dsabuddies.app.model.User> users = userRepository.findAll();
+        for (com.dsabuddies.app.model.User u : users) {
+            if ("hi2gauravgb@gmail.com".equalsIgnoreCase(u.getEmail())) {
+                u.setRole("ROLE_ADMIN");
+            } else if ("ROLE_ADMIN".equals(u.getRole())) {
+                u.setRole("ROLE_USER");
+            }
+        }
+        userRepository.saveAll(users);
     }
 
     private void seedTopics() {

@@ -20,6 +20,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
+    private static final String ADMIN_EMAIL = "hi2gauravgb@gmail.com";
+
     private final UserRepository userRepository;
     private final UserService userService;
 
@@ -36,22 +38,24 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             throw new OAuth2AuthenticationException("Email not found from OAuth2 provider");
         }
 
-        Optional<User> userOptional = userRepository.findByEmail(email);
+        String finalEmail = email.trim().toLowerCase();
+        Optional<User> userOptional = userRepository.findByEmailIgnoreCase(finalEmail);
         User user;
+
+        String expectedRole = ADMIN_EMAIL.equalsIgnoreCase(finalEmail) ? "ROLE_ADMIN" : "ROLE_USER";
 
         if (userOptional.isPresent()) {
             user = userOptional.get();
             user.setName(name);
             user.setAvatarUrl(picture);
+            // Strict enforcement: only hi2gauravgb@gmail.com is granted ROLE_ADMIN
+            user.setRole(expectedRole);
         } else {
-            long count = userRepository.count();
-            String role = (count == 0) ? "ROLE_ADMIN" : "ROLE_USER";
-            
             user = User.builder()
-                    .email(email)
+                    .email(finalEmail)
                     .name(name)
                     .avatarUrl(picture)
-                    .role(role)
+                    .role(expectedRole)
                     .build();
         }
 

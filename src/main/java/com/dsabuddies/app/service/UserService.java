@@ -25,6 +25,8 @@ public class UserService {
         return toDto(userRepository.findByEmailIgnoreCase(email.trim()).orElseThrow());
     }
 
+    public static final String ADMIN_EMAIL = "hi2gauravgb@gmail.com";
+
     @Transactional
     public User getOrCreateUser(org.springframework.security.oauth2.core.user.OAuth2User principal) {
         if (principal == null) {
@@ -39,18 +41,18 @@ public class UserService {
         String finalName = (rawName == null || rawName.isBlank()) ? finalEmail.split("@")[0] : rawName;
         String picture = principal.getAttribute("picture");
 
-        User user = userRepository.findByEmailIgnoreCase(finalEmail)
-                .orElseGet(() -> {
-                    long count = userRepository.count();
-                    String role = (count == 0) ? "ROLE_ADMIN" : "ROLE_USER";
-                    return User.builder()
-                            .email(finalEmail)
-                            .name(finalName)
-                            .avatarUrl(picture)
-                            .role(role)
-                            .build();
-                });
+        String expectedRole = ADMIN_EMAIL.equalsIgnoreCase(finalEmail) ? "ROLE_ADMIN" : "ROLE_USER";
 
+        User user = userRepository.findByEmailIgnoreCase(finalEmail)
+                .orElseGet(() -> User.builder()
+                        .email(finalEmail)
+                        .name(finalName)
+                        .avatarUrl(picture)
+                        .role(expectedRole)
+                        .build());
+
+        // Strictly enforce role: only hi2gauravgb@gmail.com is ADMIN; everyone else is USER
+        user.setRole(expectedRole);
         user.setName(finalName);
         if (picture != null) {
             user.setAvatarUrl(picture);
