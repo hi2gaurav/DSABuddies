@@ -193,12 +193,12 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 p-1 pl-1.5 pr-3 bg-gray-100/80 dark:bg-slate-800/80 border border-gray-200/60 dark:border-slate-700/60 rounded-full hover:bg-gray-200/80 dark:hover:bg-slate-700 transition-all shadow-2xs"
+              className="flex items-center justify-center p-1 sm:py-1 sm:pl-1.5 sm:pr-3 gap-0 sm:gap-2 bg-gray-100/80 dark:bg-slate-800/80 border border-gray-200/60 dark:border-slate-700/60 rounded-full hover:bg-gray-200/80 dark:hover:bg-slate-700 transition-all shadow-2xs"
             >
               <img 
                 src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=3b82f6&color=fff`} 
                 alt="Avatar" 
-                className="w-7 h-7 rounded-full object-cover ring-2 ring-blue-500/30"
+                className="w-7 h-7 rounded-full object-cover ring-2 ring-blue-500/30 flex-shrink-0 block"
               />
               <span className="text-xs font-bold text-gray-800 dark:text-gray-200 hidden sm:block">
                 {user?.name.split(' ')[0]}

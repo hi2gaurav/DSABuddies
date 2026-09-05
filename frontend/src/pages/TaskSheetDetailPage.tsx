@@ -254,29 +254,29 @@ const TaskSheetDetailPage: React.FC = () => {
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.25, delay: idx * 0.035 }}
-              className={`p-4 sm:p-5 transition-colors flex items-center justify-between gap-4 ${
+              className={`p-4 sm:p-5 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 sm:gap-4 ${
                 task.completed
                   ? 'bg-emerald-500/5 dark:bg-emerald-950/10'
                   : 'hover:bg-blue-50/40 dark:hover:bg-slate-800/50'
               }`}
             >
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-start sm:items-center gap-2 mb-1">
                   <a
                     href={toSafeUrl(task.platformLink)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 truncate text-base transition-colors"
+                    className="font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center flex-wrap gap-1.5 text-sm sm:text-base transition-colors leading-snug break-words"
                   >
-                    <span className={task.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
+                    <span className={`break-words ${task.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}`}>
                       {task.title}
                     </span>
-                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                    <ExternalLink className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 inline-block" />
                   </a>
                 </div>
 
                 {task.description && (
-                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mb-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 sm:line-clamp-1 mb-2 break-words">
                     {task.description}
                   </p>
                 )}
@@ -291,19 +291,21 @@ const TaskSheetDetailPage: React.FC = () => {
               </div>
 
               {/* Status Action Buttons */}
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <BookmarkButton taskId={task.id} />
+              <div className="flex items-center justify-between sm:justify-end gap-2 flex-shrink-0 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-slate-700/50">
+                <div className="flex items-center gap-1.5">
+                  <BookmarkButton taskId={task.id} />
 
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  type="button"
-                  onClick={() => setSelectedNoteTask({ id: task.id, title: task.title })}
-                  className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                  title="Personal Notes & Code"
-                >
-                  <FileText className="w-4 h-4" />
-                </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    type="button"
+                    onClick={() => setSelectedNoteTask({ id: task.id, title: task.title })}
+                    className="p-2 sm:p-1.5 rounded-lg text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                    title="Personal Notes & Code"
+                  >
+                    <FileText className="w-4 h-4" />
+                  </motion.button>
+                </div>
 
                 <motion.button
                   whileHover={{ scale: 1.04 }}

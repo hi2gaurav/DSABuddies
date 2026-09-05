@@ -940,15 +940,15 @@ const AdminPage: React.FC = () => {
                                   </div>
                                   <div className="divide-y divide-gray-200/50 dark:divide-slate-800/60 rounded-xl border border-gray-200/60 dark:border-slate-800 bg-white dark:bg-slate-800/80 overflow-hidden">
                                     {sheetTasks.map((t, idx) => (
-                                      <div key={t.id} className="p-3 flex items-center justify-between gap-4 text-xs">
-                                        <div className="flex items-center gap-3 min-w-0">
-                                          <span className="text-gray-400 font-bold">{idx + 1}.</span>
-                                          <div className="truncate">
+                                      <div key={t.id} className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 text-xs">
+                                        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
+                                          <span className="text-gray-400 font-bold flex-shrink-0">{idx + 1}.</span>
+                                          <div className="min-w-0">
                                             <a
                                               href={t.platformLink}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="font-bold text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 truncate block"
+                                              className="font-bold text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 break-words block leading-snug"
                                             >
                                               {t.title}
                                             </a>

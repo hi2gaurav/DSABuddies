@@ -125,7 +125,7 @@ const BookmarksPage: React.FC = () => {
                     </button>
                   </div>
 
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 line-clamp-1">
+                  <h3 className="text-base font-bold text-gray-900 dark:text-white mb-2 leading-snug break-words">
                     {b.taskTitle}
                   </h3>
 
