@@ -114,5 +114,45 @@ export const api = {
 
   // Leaderboard History
   getLeaderboardHistory: (period?: string) => fetchApi<import('../types').LeaderboardSnapshot[]>(`/api/leaderboard/history?period=${period || 'weekly'}`),
+
+  // Mock Interview
+  startMockSession: (data?: import('../types').StartMockRequest) => fetchApi<import('../types').MockSession>('/api/mock/start', {
+    method: 'POST',
+    body: JSON.stringify(data || {}),
+  }),
+  submitMockAnswer: (sessionId: number, questionId: number, data: import('../types').SubmitMockAnswerRequest) => fetchApi<import('../types').MockSession>(`/api/mock/${sessionId}/answer/${questionId}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  completeMockSession: (sessionId: number) => fetchApi<import('../types').MockSession>(`/api/mock/${sessionId}/complete`, {
+    method: 'PUT',
+  }),
+  abandonMockSession: (sessionId: number) => fetchApi<import('../types').MockSession>(`/api/mock/${sessionId}/abandon`, {
+    method: 'PUT',
+  }),
+  getMockSession: (sessionId: number) => fetchApi<import('../types').MockSession>(`/api/mock/${sessionId}`),
+  getMockHistory: () => fetchApi<import('../types').MockSession[]>('/api/mock/history'),
+
+  // System Design Templates & User Designs
+  getDesignTemplates: (category?: string) => fetchApi<import('../types').DesignTemplate[]>(`/api/designs/templates${category ? `?category=${category}` : ''}`),
+  getDesignTemplate: (id: number) => fetchApi<import('../types').DesignTemplate>(`/api/designs/templates/${id}`),
+  getMyDesigns: () => fetchApi<import('../types').UserDesign[]>('/api/designs/mine'),
+  saveDesign: (data: import('../types').SaveDesignRequest) => fetchApi<import('../types').UserDesign>('/api/designs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  updateDesign: (id: number, data: import('../types').SaveDesignRequest) => fetchApi<import('../types').UserDesign>(`/api/designs/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data),
+  }),
+  deleteDesign: (id: number) => fetchApi<void>(`/api/designs/${id}`, { method: 'DELETE' }),
+
+  // Flashcards (SuperMemo SM-2)
+  getFlashcards: (category?: string) => fetchApi<import('../types').Flashcard[]>(`/api/flashcards${category ? `?category=${category}` : ''}`),
+  getDueFlashcards: () => fetchApi<import('../types').Flashcard[]>('/api/flashcards/due'),
+  submitFlashcardReview: (id: number, rating: number) => fetchApi<import('../types').Flashcard>(`/api/flashcards/${id}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ rating }),
+  }),
 };
 

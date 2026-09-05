@@ -13,6 +13,9 @@ import ProfilePage from './pages/ProfilePage';
 import AdminPage from './pages/AdminPage';
 import ReviewPage from './pages/ReviewPage';
 import BookmarksPage from './pages/BookmarksPage';
+import MockInterviewPage from './pages/MockInterviewPage';
+import DesignCanvasPage from './pages/DesignCanvasPage';
+import FlashcardsPage from './pages/FlashcardsPage';
 import LoadingSpinner from './components/ui/LoadingSpinner';
 
 const ProtectedRoute = ({ children, adminOnly = false }: { children: React.ReactNode, adminOnly?: boolean }) => {
@@ -48,9 +51,12 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/tasks/:id" element={<TaskSheetDetailPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/mock-interview" element={<MockInterviewPage />} />
+        <Route path="/designs" element={<DesignCanvasPage />} />
+        <Route path="/flashcards" element={<FlashcardsPage />} />
         <Route path="/reviews" element={<ReviewPage />} />
         <Route path="/bookmarks" element={<BookmarksPage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/profile/:id" element={<ProfilePage />} />
         

@@ -243,5 +243,100 @@ export interface LeaderboardSnapshot {
   createdAt: string;
 }
 
+export interface MockQuestion {
+  id: number;
+  taskId?: number;
+  title: string;
+  description: string;
+  link?: string;
+  difficulty: string;
+  topicName: string;
+  questionOrder: number;
+  timeSpentSeconds?: number;
+  answered: boolean;
+  selfRating?: number;
+  userNotes?: string;
+}
+
+export interface MockSession {
+  id: number;
+  userId: number;
+  mode: 'DSA' | 'BEHAVIORAL' | 'SYSTEM_DESIGN';
+  difficultyFilter: string;
+  topicFilter?: string;
+  questionCount: number;
+  timeLimitMinutes: number;
+  startedAt: string;
+  completedAt?: string;
+  score: number;
+  xpAwarded: number;
+  status: 'IN_PROGRESS' | 'COMPLETED' | 'ABANDONED';
+  questions: MockQuestion[];
+}
+
+export interface StartMockRequest {
+  mode?: string;
+  difficultyFilter?: string;
+  topicFilter?: string;
+  questionCount?: number;
+  timeLimitMinutes?: number;
+}
+
+export interface SubmitMockAnswerRequest {
+  timeSpentSeconds?: number;
+  selfRating?: number;
+  userNotes?: string;
+  answered?: boolean;
+}
+
+export interface DesignTemplate {
+  id: number;
+  title: string;
+  category: 'HLD' | 'LLD';
+  overview: string;
+  requirements: string;
+  components: string;
+  diagramData: string;
+  sampleSolution: string;
+  difficulty: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED';
+  tags: string;
+  createdAt: string;
+}
+
+export interface UserDesign {
+  id: number;
+  userId: number;
+  templateId?: number;
+  templateTitle?: string;
+  title: string;
+  content?: string;
+  diagramData?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SaveDesignRequest {
+  templateId?: number;
+  title?: string;
+  content?: string;
+  diagramData?: string;
+}
+
+export interface Flashcard {
+  id: number;
+  category: 'JAVA' | 'SPRING_BOOT' | 'DATABASE' | 'CS_FUNDAMENTALS';
+  question: string;
+  answer: string;
+  codeSnippet?: string;
+  difficulty: string;
+  topic?: string;
+  easeFactor: number;
+  intervalDays: number;
+  nextReviewDate: string;
+  reviewCount: number;
+  due: boolean;
+}
+
+
 
 

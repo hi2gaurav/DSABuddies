@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, Trophy, UserCircle, Settings, Code, Sparkles, Brain, Bookmark as BookmarkIcon } from 'lucide-react';
+import { LayoutDashboard, ListTodo, Trophy, UserCircle, Settings, Code, Brain, Bookmark as BookmarkIcon, Timer, Layers, BookOpen, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { api } from '../../lib/api';
@@ -26,6 +26,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Tasks', path: '/tasks', icon: ListTodo },
+    { name: 'Mock Interview', path: '/mock-interview', icon: Timer },
+    { name: 'System Design', path: '/designs', icon: Layers },
+    { name: 'Flashcards', path: '/flashcards', icon: BookOpen },
     { name: 'Reviews', path: '/reviews', icon: Brain, badge: dueCount > 0 ? dueCount : undefined },
     { name: 'Bookmarks', path: '/bookmarks', icon: BookmarkIcon },
     { name: 'Leaderboard', path: '/leaderboard', icon: Trophy },
