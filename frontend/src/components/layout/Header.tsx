@@ -130,7 +130,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                         <Bell className="w-3.5 h-3.5 text-indigo-500" />
                         <span className="text-xs font-bold text-gray-900 dark:text-white">Announcements</span>
                         {unreadAnnouncements.length > 0 && (
-                          <span className="text-[10px] font-extrabold px-1.5 py-0.2 bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 rounded-full">
+                          <span className="text-[10px] font-extrabold px-1.5 py-0.5 bg-red-100 dark:bg-red-950/60 text-red-600 dark:text-red-400 rounded-full">
                             {unreadAnnouncements.length} new
                           </span>
                         )}

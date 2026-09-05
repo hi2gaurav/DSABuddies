@@ -165,6 +165,8 @@ class DailyContentServiceTest {
 
         DailyContentDto refreshed = dailyContentService.refreshContent(today);
         assertNotNull(refreshed);
+        assertNotEquals(initial.getLeetCodeProblem().getId(), refreshed.getLeetCodeProblem().getId(),
+                "Manual refresh must rotate to a fresh LeetCode problem");
     }
 
     @Test

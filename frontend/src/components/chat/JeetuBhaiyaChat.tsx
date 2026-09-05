@@ -26,7 +26,7 @@ export const JeetuBhaiyaChat: React.FC = () => {
     return [
       {
         role: 'model',
-        content: `Arre bhai! Kaho, kaisa chal raha hai preparation? 🎯\n\nMai hu tumhara **Jeetu Bhaiya**! DSA me kisi question me phas gaye ho, Spring Boot samajh nahi aa raha, ya System Design ka trade-off clear karna hai — bindass pucho. Saath me crack karenge interview! 🔥`
+        content: `Hi! I'm **Jeetu Bhaiya**, your AI mentor for DSA, System Design, and tech interviews. What problem are we tackling today?`
       }
     ];
   });
@@ -60,7 +60,7 @@ export const JeetuBhaiyaChat: React.FC = () => {
       const response = await api.chatWithJeetuBhaiya(updatedHistory);
       const botMessage: ChatMessage = {
         role: 'model',
-        content: response.reply || 'Arre bhai, thoda sa network issue lag raha hai. Ek baar firse pucho na?'
+        content: response.reply || 'Could not connect right now. Please try asking again!'
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (err) {
@@ -68,7 +68,7 @@ export const JeetuBhaiyaChat: React.FC = () => {
         ...prev,
         {
           role: 'model',
-          content: 'Arre tension mat le, lagta hai API busy hai ya network slow hai. Firse try karo bhai!'
+          content: 'Unable to reach the AI mentor service right now. Please check your network and try again.'
         }
       ]);
     } finally {
@@ -80,7 +80,7 @@ export const JeetuBhaiyaChat: React.FC = () => {
     const initialMsg: ChatMessage[] = [
       {
         role: 'model',
-        content: `Naya shuruaat! Kaho bhai, aaj kaunsa topic fodna hai? 🚀`
+        content: `Chat cleared. What tech or coding topic would you like to explore?`
       }
     ];
     setMessages(initialMsg);
@@ -94,10 +94,10 @@ export const JeetuBhaiyaChat: React.FC = () => {
   };
 
   const starterChips = [
-    { label: '⚡ LRU Cache in O(1)', prompt: 'Jeetu Bhaiya, LRU Cache ka optimal approach aur Java code samjha do with time complexity.' },
-    { label: '☕ Virtual Threads vs Platform Threads', prompt: 'Java 21 Virtual Threads vs Platform Threads me kya difference hai interview ke liye?' },
-    { label: '🏛️ System Design: TinyURL', prompt: 'TinyURL shortener design karne ke core components aur trade-offs batao.' },
-    { label: '🎯 3 Golden Interview Tips', prompt: 'Tech interview crack karne ke 3 sabse important golden tips kya hain?' },
+    { label: '⚡ LRU Cache in O(1)', prompt: 'Explain the optimal LRU Cache implementation with Java code and time complexity.' },
+    { label: '☕ Virtual vs Platform Threads', prompt: 'What is the difference between Virtual Threads and Platform Threads in Java 21?' },
+    { label: '🏛️ System Design: URL Shortener', prompt: 'Walk through the high-level system design of a scalable URL shortener with trade-offs.' },
+    { label: '🎯 Tech Interview Strategy', prompt: 'What are the top 3 strategies to approach a FAANG-style coding interview?' },
   ];
 
   return (
@@ -152,7 +152,7 @@ export const JeetuBhaiyaChat: React.FC = () => {
                     <h3 className="font-extrabold text-sm text-gray-900 dark:text-white">
                       Jeetu Bhaiya
                     </h3>
-                    <span className="text-[10px] px-1.5 py-0.2 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-extrabold">
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 font-extrabold">
                       CHIEF GURU
                     </span>
                   </div>
@@ -200,10 +200,10 @@ export const JeetuBhaiyaChat: React.FC = () => {
                       className={`relative group max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed ${
                         isUser
                           ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-tr-none shadow-sm'
-                          : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-tl-none border border-gray-200/60 dark:border-slate-700/60'
+                          : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-tl-none border border-gray-200/60 dark:border-slate-700/60 font-sans'
                       }`}
                     >
-                      <div className="whitespace-pre-line break-words">
+                      <div className="whitespace-pre-wrap break-words">
                         {msg.content}
                       </div>
 

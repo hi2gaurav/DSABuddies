@@ -18,18 +18,24 @@ public class DailyContentService {
     private String geminiApiKey;
 
     private final Map<String, DailyContentDto> cache = new ConcurrentHashMap<>();
+    private final Map<String, Integer> refreshOffsets = new ConcurrentHashMap<>();
 
     @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 0 * * ?", zone = "Asia/Kolkata")
     public void refreshDailyMidnightContent() {
         LocalDate today = LocalDate.now();
         log.info("12:00 AM Midnight Trigger: Rotating and pre-warming daily interview prep content for {}", today);
         cache.clear();
+        refreshOffsets.clear();
         getDailyContent(today);
     }
 
     public DailyContentDto refreshContent(LocalDate date) {
-        cache.remove(date.toString());
-        return getDailyContent(date);
+        String key = date.toString();
+        int offset = refreshOffsets.compute(key, (k, v) -> v == null ? 1 : v + 1);
+        cache.remove(key);
+        DailyContentDto content = generateDeterministicDailyContent(date, offset);
+        cache.put(key, content);
+        return content;
     }
 
     public DailyContentDto getDailyContent(LocalDate date) {
@@ -38,13 +44,14 @@ public class DailyContentService {
             return cache.get(key);
         }
 
-        DailyContentDto content = generateDeterministicDailyContent(date);
+        int offset = refreshOffsets.getOrDefault(key, 0);
+        DailyContentDto content = generateDeterministicDailyContent(date, offset);
         cache.put(key, content);
         return content;
     }
 
-    private DailyContentDto generateDeterministicDailyContent(LocalDate date) {
-        long seed = date.toEpochDay();
+    private DailyContentDto generateDeterministicDailyContent(LocalDate date, int offset) {
+        long seed = date.toEpochDay() + (offset * 7919L);
         Random rng = new Random(seed);
         int dayOfYear = date.getDayOfYear();
 

@@ -786,7 +786,7 @@ const AdminPage: React.FC = () => {
                             <div className="font-bold dark:text-white flex items-center gap-1.5">
                               {member.name}
                               {member.level && (
-                                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold">
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold">
                                   Lv.{member.level}
                                 </span>
                               )}

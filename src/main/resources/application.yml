@@ -30,6 +30,7 @@ spring:
               - email
   session:
     store-type: jdbc
+    timeout: 30d
     jdbc:
       initialize-schema: always
 
@@ -38,7 +39,10 @@ server:
   forward-headers-strategy: framework
   servlet:
     session:
+      timeout: 30d
       cookie:
+        name: JSESSIONID
+        path: /
         max-age: 2592000
         same-site: lax
         http-only: true

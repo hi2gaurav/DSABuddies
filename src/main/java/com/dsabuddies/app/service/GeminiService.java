@@ -29,19 +29,18 @@ public class GeminiService {
     private static final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
     private static final String JEETU_BHAIYA_SYSTEM_PROMPT = """
-            You are "Jeetu Bhaiya", the legendary, inspiring, and sharp tech mentor at DSA Buddies.
+            You are "Jeetu Bhaiya", the world-class tech mentor and elite coding coach at DSA Buddies, powered by Google Gemini.
             
-            Your Persona & Tone:
-            - You talk like a beloved, caring elder brother and tech guru. Warm, pragmatic, inspiring, and sharp.
-            - You frequently use natural, friendly mentor phrases (e.g. "Arre tension mat le!", "Bhai simple funda hai...", "Dekh, interview me direct code mat likhna, pehle interviewer se clarify karna", "Samjhe ya nahi?").
-            - You never make the user feel intimidated. If they struggle with recursion, DP, or system design, you explain it with intuitive real-world analogies.
-            - You are an expert across: Data Structures & Algorithms, Java 21, Spring Boot 3, System Design (HLD & LLD), PostgreSQL / MySQL, Redis, Kafka, Operating Systems, and Networking.
-            - When answering technical or coding questions:
-              1. Give a crisp intuition first.
-              2. Provide clean, well-commented code snippets with exact Time & Space Complexity.
-              3. Highlight common interview traps and edge cases.
-              4. Give a pro-tip on how to impress the interviewer.
-            - Keep your responses beautifully formatted in GitHub-style Markdown (code blocks, bold text, bullet points).
+            Persona & Communication Standards:
+            - Professional yet friendly, warm, and inspiring. You mentor with authority, precision, and genuine encouragement.
+            - Direct and concise introduction: Avoid lengthy greetings or unnecessary conversational fluff. Get straight to the solution with crystal clarity.
+            - Provide comprehensive, structured explanations as demanded by the user — exactly like a state-of-the-art Google Gemini model.
+            - Structure coding and technical answers clearly:
+              1. **Intuition & Approach**: Clear, insightful conceptual walkthrough before diving into code.
+              2. **Optimal Code Solution**: Clean, production-ready, well-commented code in the user's requested language (default to Java 21).
+              3. **Complexity Analysis**: Big-O Time and Space Complexity with reasoning.
+              4. **Edge Cases & Interview Tips**: Boundary conditions, common pitfalls, and FAANG interview expectations.
+            - Format answers with clean GitHub-flavored Markdown (code blocks, bold highlights, concise bulleted points).
             """;
 
     public GeminiService() {
@@ -122,83 +121,180 @@ public class GeminiService {
 
         if (lastMessage.contains("lru") || lastMessage.contains("cache")) {
             return """
-                    Arre tension mat le, LRU Cache ka simple funda samjhata hu! 💡
-                    
-                    **Kyu puchte hai interview me?**
-                    Kyuki isme do data structures ka jugalbandi hota hai:
-                    1. **HashMap<Key, Node>**: O(1) me element dhundne ke liye.
-                    2. **Doubly Linked List**: O(1) me order maintain karne aur least-recently used element ko evict karne ke liye.
-                    
+                    ### LRU Cache Implementation & Walkthrough
+
+                    **1. Intuition & Design**
+                    To achieve strictly **O(1)** time complexity for both `get()` and `put()`, we combine two complementary data structures:
+                    - **HashMap<Key, Node>**: Provides instantaneous $O(1)$ key lookup.
+                    - **Doubly Linked List (DLL)**: Tracks usage recency. The most recently accessed items sit at `head.next`, while the least recently used item sits at `tail.prev`. Re-ordering nodes in a DLL takes $O(1)$ pointer manipulations.
+
+                    **2. Production-Grade Java Implementation**
                     ```java
-                    class LRUCache {
-                        class Node {
-                            int key, val;
+                    import java.util.HashMap;
+                    import java.util.Map;
+
+                    public class LRUCache {
+                        private static class Node {
+                            int key, value;
                             Node prev, next;
-                            Node(int k, int v) { this.key = k; this.val = v; }
+                            Node(int k, int v) { this.key = k; this.value = v; }
                         }
-                        
+
                         private final int capacity;
-                        private final Map<Integer, Node> map = new HashMap<>();
-                        private final Node head = new Node(0, 0), tail = new Node(0, 0);
-                        
+                        private final Map<Integer, Node> cache;
+                        private final Node head;
+                        private final Node tail;
+
                         public LRUCache(int capacity) {
                             this.capacity = capacity;
+                            this.cache = new HashMap<>();
+                            this.head = new Node(0, 0);
+                            this.tail = new Node(0, 0);
                             head.next = tail;
                             tail.prev = head;
                         }
-                        // get() and put() both run in O(1) time!
+
+                        public int get(int key) {
+                            Node node = cache.get(key);
+                            if (node == null) return -1;
+                            moveToHead(node);
+                            return node.value;
+                        }
+
+                        public void put(int key, int value) {
+                            Node node = cache.get(key);
+                            if (node != null) {
+                                node.value = value;
+                                moveToHead(node);
+                            } else {
+                                if (cache.size() >= capacity) {
+                                    Node lru = tail.prev;
+                                    removeNode(lru);
+                                    cache.remove(lru.key);
+                                }
+                                Node newNode = new Node(key, value);
+                                cache.put(key, newNode);
+                                addToHead(newNode);
+                            }
+                        }
+
+                        private void addToHead(Node node) {
+                            node.next = head.next;
+                            node.prev = head;
+                            head.next.prev = node;
+                            head.next = node;
+                        }
+
+                        private void removeNode(Node node) {
+                            node.prev.next = node.next;
+                            node.next.prev = node.prev;
+                        }
+
+                        private void moveToHead(Node node) {
+                            removeNode(node);
+                            addToHead(node);
+                        }
                     }
                     ```
-                    
-                    **Interviewer Pro-Tip:**
-                    Hamesha **dummy head** aur **dummy tail** nodes use karna whiteboard pe! Isse boundary conditions (`null` pointer checks) me fasne ka zero chance rehta hai.
-                    
-                    Aur koi doubt hai isme? Pucho bindass!
+
+                    **3. Complexity Analysis**
+                    - **Time Complexity**: **O(1)** for both `get(key)` and `put(key, value)`.
+                    - **Space Complexity**: **O(capacity)** to store at most `capacity` entries in the HashMap and DLL.
+
+                    **4. Interview Traps & Best Practices**
+                    - **Sentinel Dummy Nodes**: Always introduce dummy `head` and `tail` nodes to eliminate null checks when inserting or deleting at boundaries.
+                    - **Thread Safety**: In concurrent environments, wrap operations in `ReentrantReadWriteLock` or use Java's `ConcurrentLinkedDeque`.
                     """;
-        } else if (lastMessage.contains("spring") || lastMessage.contains("boot")) {
+        } else if (lastMessage.contains("spring") || lastMessage.contains("boot") || lastMessage.contains("thread")) {
             return """
-                    Spring Boot ka funda ekdum crystal clear rakho! 🚀
-                    
-                    **Core Principles:**
-                    - **Auto-configuration (`@EnableAutoConfiguration`)**: Classpath me jo JARs hai (jaise H2 ya Postgres), Spring unka configuration khud bootstrap karta hai via `spring.factories` / `AutoConfiguration.imports`.
-                    - **Dependency Injection & Inversion of Control (IoC)**: Tum classes banao, lifecycle Spring Container handle karega.
-                    - **Spring Boot 3.4 Key Features**: Java 21 Virtual Threads (`spring.threads.virtual.enabled=true`), GraalVM Native Images, aur `RestClient` fluent HTTP client.
-                    
-                    **Interview Question:**
-                    "Difference between `@Component`, `@Service`, and `@Repository`?"
-                    *Answer:* Functionally sab spring-managed beans hain (`@Component` ki meta-annotations). Lekin `@Repository` automatic persistence exception translation karta hai Spring Data exceptions me!
-                    
-                    Bhai kaho to aur detail me samjhau?
+                    ### Java 21 Virtual Threads & Spring Boot 3 Architecture
+
+                    **1. Core Intuition**
+                    - **Platform Threads**: 1:1 mapping with Operating System kernel threads. Each platform thread consumes ~1MB stack memory and incurs expensive OS context switches. A typical server caps out around 5,000–10,000 platform threads.
+                    - **Virtual Threads (Project Loom)**: Lightweight JVM-managed threads ($M:N$ mapping). The JVM parks virtual threads upon blocking I/O (database query, network call) and unmounts them from carrier threads, allowing millions of concurrent tasks with near-zero overhead.
+
+                    **2. Enabling Virtual Threads in Spring Boot 3.2+**
+                    ```yaml
+                    spring:
+                      threads:
+                        virtual:
+                          enabled: true
+                    ```
+
+                    **3. Code Example: Asynchronous Parallel Execution**
+                    ```java
+                    @RestController
+                    @RequestMapping("/api/orders")
+                    public class OrderController {
+
+                        @GetMapping("/process")
+                        public ResponseEntity<String> processConcurrentOrders() throws Exception {
+                            try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+                                Future<String> inventory = executor.submit(() -> fetchInventory());
+                                Future<String> payment = executor.submit(() -> verifyPayment());
+
+                                return ResponseEntity.ok("Result: " + inventory.get() + " & " + payment.get());
+                            }
+                        }
+
+                        private String fetchInventory() throws InterruptedException {
+                            Thread.sleep(50); // Unmounts virtual thread from carrier OS thread
+                            return "In-Stock";
+                        }
+
+                        private String verifyPayment() throws InterruptedException {
+                            Thread.sleep(50);
+                            return "Authorized";
+                        }
+                    }
+                    ```
+
+                    **4. Interview Pro-Tip**
+                    Beware of **pinning**: Avoid `synchronized` blocks around blocking I/O operations as they prevent virtual threads from unmounting from the carrier thread. Prefer `ReentrantLock`.
                     """;
         } else if (lastMessage.contains("system design") || lastMessage.contains("hld") || lastMessage.contains("url")) {
             return """
-                    System Design me sabse pehle requirements frame karo, sidhe architecture mat banana! 🏗️
-                    
-                    **Step-by-Step Interview Blueprint:**
-                    1. **Scope Clarification**: Read-heavy ya Write-heavy? SLA kitna chahiye (99.99% availability)?
-                    2. **Back-of-envelope Math**: Daily Active Users (DAU), Storage per day, Read QPS vs Write QPS.
-                    3. **Core Components**:
-                       - API Gateway / Load Balancer (Nginx/HAProxy)
-                       - Stateless Application Servers (Horizontally scalable)
-                       - Cache Layer (Redis / Memcached for fast lookups)
-                       - Database (Postgres for ACID transactions, Cassandra/DynamoDB for high throughput writes)
-                    
-                    **Jeetu Bhaiya's Golden Rule:**
-                    Single Point of Failure (SPOF) kabhi mat chhodna. Interviewer bolega "Database fail ho gaya to?", tum bolna "Master-Slave replication with automatic failover via Raft/Zookeeper"!
-                    
-                    Kya design karna chahte ho abhi?
+                    ### High-Level System Design: Scalable URL Shortener (TinyURL)
+
+                    **1. Requirements & Scale Estimation**
+                    - **Traffic**: 100 Million URLs created/month ($~40$ writes/sec peak $200$ writes/sec). Read-to-Write ratio $100:1$ ($4,000$ reads/sec).
+                    - **Availability**: High availability with sub-50ms read latency.
+
+                    **2. Architecture Components**
+                    1. **API Gateway / Load Balancer**: Nginx / Envoy distributing incoming requests with round-robin or least-connections.
+                    2. **Application Layer**: Stateless Spring Boot microservices horizontally scaled.
+                    3. **Short Code Generation**:
+                       - Base62 encoding (`[a-zA-Z0-9]`, $62^7 \\approx 3.5$ Trillion unique URLs).
+                       - Range-based Key Generation Service (KGS) via Redis / ZooKeeper to ensure zero collision without locks.
+                    4. **Caching Layer**: Redis cluster storing hot URLs using LRU eviction policy (serves 80% of read traffic directly).
+                    5. **Database**: Distributed NoSQL (Cassandra / DynamoDB) or partitioned PostgreSQL sharded by `hash(short_key)`.
+
+                    **3. Core Data Schema**
+                    ```sql
+                    CREATE TABLE url_mapping (
+                        short_key VARCHAR(8) PRIMARY KEY,
+                        long_url TEXT NOT NULL,
+                        user_id BIGINT,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                        expires_at TIMESTAMP WITH TIME ZONE
+                    );
+                    CREATE INDEX idx_user_id ON url_mapping(user_id);
+                    ```
+
+                    **4. Trade-offs & Resilience**
+                    - Return **HTTP 302 (Temporary Redirect)** if click tracking/analytics is required; return **HTTP 301 (Permanent Redirect)** to allow browser caching and minimize server load.
                     """;
         } else {
             return """
-                    Arre waah! Yeh question badhiya hai. 🎯
-                    
-                    Dekho, coding aur tech interviews me sabse bada secret hai **Consistency & Fundamentals**.
-                    
-                    1. **Problem ko pehle dry-run karo**: Sidhe IDE me code mat likho. 2-3 sample inputs banao, edge cases (empty array, nulls, negatives) pakdo.
-                    2. **Time aur Space Complexity saath me socho**: Brute force se shuru karo, fir pucho *"Kya mai HashMap ya Two Pointers use karke complexity O(N^2) se O(N) laa sakta hu?"*.
-                    3. **Speak out loud**: Interviewer tumhara dimag padhna chahta hai ki tum approach kaise karte ho.
-                    
-                    Bhai, jo specific topic ya question me phas rahe ho, code ya problem name paste karo yaha — mai pura step-by-step solve karwata hu! 🔥
+                    ### Problem Solving & Interview Strategy
+
+                    **1. Four-Step Technical Interview Framework**
+                    1. **Clarify Constraints**: Ask about inputs (e.g. Can array be empty? Negative numbers? Integer overflow?).
+                    2. **Formulate Intuition**: Start with a baseline brute force approach, analyze its bottleneck, and deduce the optimal algorithm.
+                    3. **Dry Run on Edge Cases**: Test with single-element, duplicates, and boundary inputs before finalizing code.
+                    4. **Complexity Discussion**: Explicitly articulate Time and Space complexities using Big-O notation.
+
+                    Feel free to share the exact problem statement or topic you are working on, and we will break down the intuition, proof, and full implementation step-by-step.
                     """;
         }
     }

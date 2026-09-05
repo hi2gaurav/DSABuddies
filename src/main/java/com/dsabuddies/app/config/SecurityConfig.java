@@ -54,7 +54,7 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session -> {
                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
-                session.maximumSessions(1);
+                session.maximumSessions(10);
             })
             .addFilterBefore(userRoleSyncFilter, org.springframework.security.web.access.intercept.AuthorizationFilter.class)
             .exceptionHandling(ex -> ex
