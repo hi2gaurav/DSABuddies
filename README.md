@@ -4,6 +4,8 @@
 
 A full-stack web application for DSA (Data Structures & Algorithms) task tracking, built for WhatsApp community study groups.
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/hi2gaurav/DSABuddies)
+
 ## ✨ Features
 
 - 🔐 **Google Sign-In** — One-click authentication
