@@ -31,6 +31,7 @@ public class SecurityConfig {
 
     private final CustomOAuth2UserService customOAuth2UserService;
     private final UserService userService;
+    private final com.dsabuddies.app.security.UserRoleSyncFilter userRoleSyncFilter;
 
     @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
@@ -46,7 +47,7 @@ public class SecurityConfig {
                         .toList();
                 config.setAllowedOrigins(origins.isEmpty() ? List.of("http://localhost:5173") : origins);
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-                config.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+                config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"));
                 config.setAllowCredentials(true);
                 return config;
             }))
@@ -55,6 +56,7 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
                 session.maximumSessions(1);
             })
+            .addFilterBefore(userRoleSyncFilter, org.springframework.security.web.access.intercept.AuthorizationFilter.class)
             .exceptionHandling(ex -> ex
                 .defaultAuthenticationEntryPointFor(
                     new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
@@ -64,10 +66,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/login/**", "/error", "/css/**", "/js/**", "/images/**", "/assets/**", "/favicon.ico", "/api/auth/status").permitAll()
                 .requestMatchers("/api/tasks/*/complete").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasRole("ADMIN")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/task-sheets", "/api/task-sheets/**", "/api/tasks", "/api/tasks/**", "/api/topics", "/api/topics/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_ADMIN", "ADMIN")
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll() // Forward everything else to SPA
             )

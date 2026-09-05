@@ -776,7 +776,7 @@ const AdminPage: React.FC = () => {
                   {filteredMembers.map(member => {
                     const isMuted = member.status === 'MUTED';
                     const isBanned = member.status === 'BANNED';
-                    const isPrimaryAdmin = member.email === 'hi2gauravgb@gmail.com';
+                    const isPrimaryAdmin = member.email === 'hi2gauravgb@gmail.com' || member.email === 'hi2gauravgb@gmai.com';
 
                     return (
                       <tr key={member.id} className="hover:bg-gray-50/60 dark:hover:bg-slate-800/40 transition-colors">

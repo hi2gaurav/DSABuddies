@@ -44,7 +44,7 @@ public class TaskSheetController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN') or hasAuthority('ROLE_ADMIN') or @userService.isAdmin(authentication)")
     public ResponseEntity<TaskSheetDto> createTaskSheet(
             @jakarta.validation.Valid @RequestBody CreateTaskSheetRequest request,
             @AuthenticationPrincipal OAuth2User principal,
@@ -70,7 +70,7 @@ public class TaskSheetController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN') or hasAuthority('ROLE_ADMIN') or @userService.isAdmin(authentication)")
     public ResponseEntity<Void> deleteTaskSheet(
             @PathVariable Long id,
             @AuthenticationPrincipal OAuth2User principal,

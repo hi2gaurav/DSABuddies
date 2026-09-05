@@ -26,6 +26,35 @@ public class UserService {
     }
 
     public static final String ADMIN_EMAIL = "hi2gauravgb@gmail.com";
+    public static final String ADMIN_EMAIL_ALT = "hi2gauravgb@gmai.com";
+
+    public static boolean isPrimaryAdmin(String email) {
+        if (email == null) return false;
+        String clean = email.trim().toLowerCase();
+        return clean.equals(ADMIN_EMAIL) || clean.equals(ADMIN_EMAIL_ALT);
+    }
+
+    public boolean isAdmin(org.springframework.security.core.Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return false;
+        }
+        String email = null;
+        if (authentication.getPrincipal() instanceof org.springframework.security.oauth2.core.user.OAuth2User oauthUser) {
+            email = oauthUser.getAttribute("email");
+            if (email == null) email = oauthUser.getName();
+        } else {
+            email = authentication.getName();
+        }
+        if (isPrimaryAdmin(email)) {
+            return true;
+        }
+        if (email != null && !email.isBlank() && !"anonymousUser".equalsIgnoreCase(email)) {
+            return userRepository.findByEmailIgnoreCase(email.trim().toLowerCase())
+                    .map(u -> "ROLE_ADMIN".equals(u.getRole()))
+                    .orElse(false);
+        }
+        return false;
+    }
 
     @Transactional
     public User getOrCreateUser(org.springframework.security.oauth2.core.user.OAuth2User principal) {
@@ -41,7 +70,7 @@ public class UserService {
         String finalName = (rawName == null || rawName.isBlank()) ? finalEmail.split("@")[0] : rawName;
         String picture = principal.getAttribute("picture");
 
-        String expectedRole = ADMIN_EMAIL.equalsIgnoreCase(finalEmail) ? "ROLE_ADMIN" : "ROLE_USER";
+        String expectedRole = isPrimaryAdmin(finalEmail) ? "ROLE_ADMIN" : "ROLE_USER";
 
         User user = userRepository.findByEmailIgnoreCase(finalEmail)
                 .orElseGet(() -> User.builder()
@@ -51,7 +80,7 @@ public class UserService {
                         .role(expectedRole)
                         .build());
 
-        // Strictly enforce role: only hi2gauravgb@gmail.com is ADMIN; everyone else is USER
+        // Strictly enforce role: only primary admin is ADMIN; everyone else is USER unless granted
         user.setRole(expectedRole);
         user.setName(finalName);
         if (picture != null) {
@@ -88,7 +117,7 @@ public class UserService {
             String email = authentication.getName();
             if (email != null && !email.isBlank() && !"anonymousUser".equalsIgnoreCase(email)) {
                 return userRepository.findByEmailIgnoreCase(email.trim()).orElseGet(() -> {
-                    String role = ADMIN_EMAIL.equalsIgnoreCase(email.trim()) ? "ROLE_ADMIN" : "ROLE_USER";
+                    String role = isPrimaryAdmin(email.trim()) ? "ROLE_ADMIN" : "ROLE_USER";
                     return userRepository.save(User.builder()
                             .email(email.trim().toLowerCase())
                             .name(email.split("@")[0])

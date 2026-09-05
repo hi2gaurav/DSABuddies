@@ -86,4 +86,74 @@ class AdminTaskAndSheetControllerTest {
         mockMvc.perform(delete("/api/task-sheets/" + sheetId))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @WithMockUser(username = "hi2gauravgb@gmail.com", roles = "USER")
+    @DisplayName("UserRoleSyncFilter elevates hi2gauravgb@gmail.com even if session only had ROLE_USER")
+    void testElevationForPrimaryAdminEmail() throws Exception {
+        String sheetJson = """
+                {
+                    "title": "Elevated Sheet Test",
+                    "description": "Created after dynamic elevation",
+                    "startDate": "2026-09-06",
+                    "endDate": "2026-09-13",
+                    "sheetType": "DAILY"
+                }
+                """;
+
+        String sheetResponse = mockMvc.perform(post("/api/task-sheets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(sheetJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andReturn().getResponse().getContentAsString();
+
+        long sheetId = new com.fasterxml.jackson.databind.ObjectMapper().readTree(sheetResponse).get("id").asLong();
+        mockMvc.perform(delete("/api/task-sheets/" + sheetId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "hi2gauravgb@gmai.com", roles = "USER")
+    @DisplayName("UserRoleSyncFilter elevates hi2gauravgb@gmai.com even if session only had ROLE_USER")
+    void testElevationForAltAdminEmail() throws Exception {
+        String sheetJson = """
+                {
+                    "title": "Elevated Alt Sheet Test",
+                    "description": "Created after dynamic elevation",
+                    "startDate": "2026-09-06",
+                    "endDate": "2026-09-13",
+                    "sheetType": "DAILY"
+                }
+                """;
+
+        String sheetResponse = mockMvc.perform(post("/api/task-sheets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(sheetJson))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andReturn().getResponse().getContentAsString();
+
+        long sheetId = new com.fasterxml.jackson.databind.ObjectMapper().readTree(sheetResponse).get("id").asLong();
+        mockMvc.perform(delete("/api/task-sheets/" + sheetId)).andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "regular_user@example.com", roles = "USER")
+    @DisplayName("Regular user without admin email or DB admin role receives 403 Forbidden")
+    void testNonAdminForbidden() throws Exception {
+        String sheetJson = """
+                {
+                    "title": "Unauthorized Sheet",
+                    "description": "Should fail with 403",
+                    "startDate": "2026-09-06",
+                    "endDate": "2026-09-13",
+                    "sheetType": "DAILY"
+                }
+                """;
+
+        mockMvc.perform(post("/api/task-sheets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(sheetJson))
+                .andExpect(status().isForbidden());
+    }
 }

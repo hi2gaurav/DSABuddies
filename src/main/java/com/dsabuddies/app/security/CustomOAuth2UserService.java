@@ -31,6 +31,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
         String email = oAuth2User.getAttribute("email");
+        if (email == null) {
+            email = oAuth2User.getName();
+        }
+
         String name = oAuth2User.getAttribute("name");
         String picture = oAuth2User.getAttribute("picture");
 
@@ -42,13 +46,13 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         Optional<User> userOptional = userRepository.findByEmailIgnoreCase(finalEmail);
         User user;
 
-        String expectedRole = ADMIN_EMAIL.equalsIgnoreCase(finalEmail) ? "ROLE_ADMIN" : "ROLE_USER";
+        String expectedRole = UserService.isPrimaryAdmin(finalEmail) ? "ROLE_ADMIN" : "ROLE_USER";
 
         if (userOptional.isPresent()) {
             user = userOptional.get();
             user.setName(name);
             user.setAvatarUrl(picture);
-            // Strict enforcement: only hi2gauravgb@gmail.com is granted ROLE_ADMIN
+            // Strict enforcement: primary admin is granted ROLE_ADMIN
             user.setRole(expectedRole);
         } else {
             user = User.builder()
@@ -61,8 +65,15 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         userService.updateStreak(user); // saves user
 
+        java.util.Set<org.springframework.security.core.GrantedAuthority> authorities = new java.util.HashSet<>();
+        authorities.add(new SimpleGrantedAuthority(user.getRole()));
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+            authorities.add(new SimpleGrantedAuthority("ADMIN"));
+        }
+
         return new DefaultOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority(user.getRole())),
+                authorities,
                 oAuth2User.getAttributes(),
                 "email"
         );

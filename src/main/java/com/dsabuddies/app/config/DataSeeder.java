@@ -34,7 +34,7 @@ public class DataSeeder implements CommandLineRunner {
     private void cleanupAdminRoles() {
         List<com.dsabuddies.app.model.User> users = userRepository.findAll();
         for (com.dsabuddies.app.model.User u : users) {
-            if ("hi2gauravgb@gmail.com".equalsIgnoreCase(u.getEmail())) {
+            if (com.dsabuddies.app.service.UserService.isPrimaryAdmin(u.getEmail())) {
                 u.setRole("ROLE_ADMIN");
             } else if ("ROLE_ADMIN".equals(u.getRole())) {
                 u.setRole("ROLE_USER");

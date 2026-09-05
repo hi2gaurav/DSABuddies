@@ -43,7 +43,7 @@ public class TaskController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN') or hasAuthority('ROLE_ADMIN') or @userService.isAdmin(authentication)")
     public ResponseEntity<TaskDto> createTask(
             @jakarta.validation.Valid @RequestBody CreateTaskRequest request,
             @AuthenticationPrincipal OAuth2User principal,
@@ -69,7 +69,7 @@ public class TaskController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN') or hasAuthority('ROLE_ADMIN') or @userService.isAdmin(authentication)")
     public ResponseEntity<Void> deleteTask(
             @PathVariable Long id,
             @AuthenticationPrincipal OAuth2User principal,
