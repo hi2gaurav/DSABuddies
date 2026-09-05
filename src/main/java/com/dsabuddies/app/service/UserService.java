@@ -61,6 +61,48 @@ public class UserService {
         return user;
     }
 
+    @Transactional
+    public User getAdminUser() {
+        return userRepository.findByEmailIgnoreCase(ADMIN_EMAIL).orElseGet(() ->
+            userRepository.save(User.builder()
+                    .email(ADMIN_EMAIL)
+                    .name("Admin")
+                    .role("ROLE_ADMIN")
+                    .totalXp(0)
+                    .currentStreak(1)
+                    .maxStreak(1)
+                    .build())
+        );
+    }
+
+    @Transactional
+    public User resolveUser(org.springframework.security.core.Authentication authentication, org.springframework.security.oauth2.core.user.OAuth2User oauthUser) {
+        if (oauthUser != null) {
+            return getOrCreateUser(oauthUser);
+        }
+        if (authentication != null && authentication.isAuthenticated()) {
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof org.springframework.security.oauth2.core.user.OAuth2User oUser) {
+                return getOrCreateUser(oUser);
+            }
+            String email = authentication.getName();
+            if (email != null && !email.isBlank() && !"anonymousUser".equalsIgnoreCase(email)) {
+                return userRepository.findByEmailIgnoreCase(email.trim()).orElseGet(() -> {
+                    String role = ADMIN_EMAIL.equalsIgnoreCase(email.trim()) ? "ROLE_ADMIN" : "ROLE_USER";
+                    return userRepository.save(User.builder()
+                            .email(email.trim().toLowerCase())
+                            .name(email.split("@")[0])
+                            .role(role)
+                            .totalXp(0)
+                            .currentStreak(1)
+                            .maxStreak(1)
+                            .build());
+                });
+            }
+        }
+        return getAdminUser();
+    }
+
     public List<UserDto> getAllUsers() {
         return userRepository.findAllByOrderByTotalXpDesc()
                 .stream().map(this::toDto).collect(Collectors.toList());

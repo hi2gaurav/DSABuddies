@@ -12,7 +12,7 @@ import {
   Settings, Users, FileText, Plus, Check, BarChart3, ShieldAlert,
   Megaphone, ScrollText, Calendar, TrendingUp, AlertTriangle,
   UserX, UserCheck, Clock, Search, Trash2, Send,
-  Award
+  Award, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -62,13 +62,26 @@ const AdminPage: React.FC = () => {
   });
   const [broadcastLoading, setBroadcastLoading] = useState(false);
 
+  const getDefaultDates = () => {
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
+    return {
+      start: today.toISOString().split('T')[0],
+      end: nextWeek.toISOString().split('T')[0],
+    };
+  };
+
   // Sheet & Task Form States
-  const [sheetForm, setSheetForm] = useState({
-    title: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    sheetType: 'DAILY'
+  const [sheetForm, setSheetForm] = useState(() => {
+    const d = getDefaultDates();
+    return {
+      title: '',
+      description: '',
+      startDate: d.start,
+      endDate: d.end,
+      sheetType: 'DAILY'
+    };
   });
   const [taskForm, setTaskForm] = useState({
     taskSheetId: '',
@@ -79,6 +92,7 @@ const AdminPage: React.FC = () => {
     platformLink: '',
     xpReward: 100
   });
+  const [expandedSheetId, setExpandedSheetId] = useState<number | null>(null);
 
   const { show } = useToast();
 
@@ -91,8 +105,11 @@ const AdminPage: React.FC = () => {
     try {
       const data = await api.getTaskSheets();
       setSheets(data);
-      if (data.length > 0 && !selectedSheetId) {
-        setSelectedSheetId(data[0].id);
+      if (data.length > 0) {
+        if (!selectedSheetId) {
+          setSelectedSheetId(data[0].id);
+        }
+        setTaskForm(prev => prev.taskSheetId ? prev : { ...prev, taskSheetId: String(data[0].id) });
       }
     } catch {
       show('Error fetching sheets', 'error');
@@ -100,7 +117,15 @@ const AdminPage: React.FC = () => {
   };
 
   const fetchTopics = async () => {
-    try { const data = await api.getTopics(); setTopics(data); } catch (e) { console.error(e); }
+    try {
+      const data = await api.getTopics();
+      setTopics(data);
+      if (data.length > 0) {
+        setTaskForm(prev => prev.topicId ? prev : { ...prev, topicId: String(data[0].id) });
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const fetchAnalytics = async () => {
@@ -239,15 +264,28 @@ const AdminPage: React.FC = () => {
   };
 
   const handleDeleteSheet = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this sheet and all its tasks?')) return;
+    if (!window.confirm('Are you sure you want to delete this sheet and all its tasks?')) return;
     try {
       await api.deleteTaskSheet(id);
       show('Task sheet deleted successfully', 'success');
-      fetchSheets();
+      await fetchSheets();
       fetchAuditLogs();
       fetchAnalytics();
     } catch (e: any) {
       show(e.message || 'Error deleting sheet', 'error');
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    if (!window.confirm('Are you sure you want to delete this task?')) return;
+    try {
+      await api.deleteTask(taskId);
+      show('Task deleted successfully', 'success');
+      await fetchSheets();
+      fetchAuditLogs();
+      fetchAnalytics();
+    } catch (e: any) {
+      show(e.message || 'Error deleting task', 'error');
     }
   };
 
@@ -270,8 +308,9 @@ const AdminPage: React.FC = () => {
         sheetType: sheetForm.sheetType,
       });
       show('Task sheet created successfully!', 'success');
-      setSheetForm({ title: '', description: '', startDate: '', endDate: '', sheetType: 'DAILY' });
-      fetchSheets();
+      const d = getDefaultDates();
+      setSheetForm({ title: '', description: '', startDate: d.start, endDate: d.end, sheetType: 'DAILY' });
+      await fetchSheets();
       fetchAuditLogs();
       setActiveTab('sheets');
     } catch (e: any) {
@@ -282,7 +321,7 @@ const AdminPage: React.FC = () => {
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!taskForm.taskSheetId) {
-      show('Please select a task sheet', 'error');
+      show('Please select a task sheet. If none exist, create a sheet first.', 'error');
       return;
     }
     if (!taskForm.topicId) {
@@ -293,19 +332,28 @@ const AdminPage: React.FC = () => {
       show('Please enter a task title', 'error');
       return;
     }
+
+    let link = taskForm.platformLink.trim();
+    if (link && !link.startsWith('http://') && !link.startsWith('https://')) {
+      link = 'https://' + link;
+    }
+    if (!link) {
+      link = 'https://leetcode.com';
+    }
+
     try {
       await api.createTask({
         taskSheetId: Number(taskForm.taskSheetId),
         topicId: Number(taskForm.topicId),
         title: taskForm.title.trim(),
-        description: taskForm.description.trim(),
+        description: taskForm.description.trim() || taskForm.title.trim(),
         difficulty: taskForm.difficulty,
-        platformLink: taskForm.platformLink.trim() || 'https://leetcode.com',
+        platformLink: link,
         xpReward: Number(taskForm.xpReward) || 100,
       });
       show('Task created successfully!', 'success');
-      setTaskForm({ ...taskForm, title: '', description: '', platformLink: '', xpReward: 100 });
-      fetchSheets();
+      setTaskForm(prev => ({ ...prev, title: '', description: '', platformLink: '', xpReward: 100 }));
+      await fetchSheets();
       fetchAuditLogs();
       setActiveTab('sheets');
     } catch (e: any) {
@@ -808,6 +856,7 @@ const AdminPage: React.FC = () => {
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50/70 dark:bg-slate-800/70 border-b border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold tracking-wider">
+                    <th className="py-3 px-4 w-8"></th>
                     <th className="py-3 px-4">Title</th>
                     <th className="py-3 px-4">Type</th>
                     <th className="py-3 px-4">Dates</th>
@@ -816,28 +865,130 @@ const AdminPage: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-slate-800 text-sm">
-                  {sheets.map(sheet => (
-                    <tr key={sheet.id} className="hover:bg-gray-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">{sheet.title}</td>
-                      <td className="py-3 px-4">
-                        <Badge variant="default">{sheet.sheetType}</Badge>
-                      </td>
-                      <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400">
-                        {sheet.startDate} to {sheet.endDate}
-                      </td>
-                      <td className="py-3 px-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300">
-                        {sheet.tasks?.length || 0}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <button
-                          onClick={() => handleDeleteSheet(sheet.id)}
-                          className="text-rose-500 hover:text-rose-700 text-xs font-bold p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-                        >
-                          Delete
-                        </button>
+                  {sheets.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-gray-400 text-sm">
+                        No task sheets found. Click 'Create Sheet' to add the first curriculum module.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    sheets.map(sheet => {
+                      const isExpanded = expandedSheetId === sheet.id;
+                      const sheetTasks = sheet.tasks || [];
+                      return (
+                        <React.Fragment key={sheet.id}>
+                          <tr className="hover:bg-gray-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                            <td className="py-3 px-4 text-center">
+                              {sheetTasks.length > 0 && (
+                                <button
+                                  onClick={() => setExpandedSheetId(isExpanded ? null : sheet.id)}
+                                  className="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 p-1 rounded-md transition-colors"
+                                  title={isExpanded ? "Collapse tasks" : "Expand tasks"}
+                                >
+                                  {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                </button>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 font-bold text-gray-900 dark:text-white">
+                              {sheet.title}
+                              {sheet.description && (
+                                <div className="text-xs font-normal text-gray-400 mt-0.5 truncate max-w-md">
+                                  {sheet.description}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge variant="default">{sheet.sheetType}</Badge>
+                            </td>
+                            <td className="py-3 px-4 text-xs text-gray-500 dark:text-gray-400">
+                              {sheet.startDate} to {sheet.endDate}
+                            </td>
+                            <td className="py-3 px-4 text-center text-xs font-bold text-gray-700 dark:text-gray-300">
+                              <button
+                                onClick={() => setExpandedSheetId(isExpanded ? null : sheet.id)}
+                                className="px-2 py-1 rounded-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+                              >
+                                {sheetTasks.length} tasks
+                              </button>
+                            </td>
+                            <td className="py-3 px-4 text-right space-x-2">
+                              <button
+                                onClick={() => {
+                                  setTaskForm(prev => ({ ...prev, taskSheetId: String(sheet.id) }));
+                                  setActiveTab('create-task');
+                                }}
+                                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 text-xs font-bold p-1 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                              >
+                                + Add Task
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSheet(sheet.id)}
+                                className="text-rose-500 hover:text-rose-700 text-xs font-bold p-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                              >
+                                Delete Sheet
+                              </button>
+                            </td>
+                          </tr>
+
+                          {/* EXPANDED TASKS SUB-ROW */}
+                          {isExpanded && sheetTasks.length > 0 && (
+                            <tr>
+                              <td colSpan={6} className="bg-gray-50/50 dark:bg-slate-900/50 px-6 py-4 border-y border-gray-200/50 dark:border-slate-800">
+                                <div className="space-y-2">
+                                  <div className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-2">
+                                    Tasks in {sheet.title} ({sheetTasks.length})
+                                  </div>
+                                  <div className="divide-y divide-gray-200/50 dark:divide-slate-800/60 rounded-xl border border-gray-200/60 dark:border-slate-800 bg-white dark:bg-slate-800/80 overflow-hidden">
+                                    {sheetTasks.map((t, idx) => (
+                                      <div key={t.id} className="p-3 flex items-center justify-between gap-4 text-xs">
+                                        <div className="flex items-center gap-3 min-w-0">
+                                          <span className="text-gray-400 font-bold">{idx + 1}.</span>
+                                          <div className="truncate">
+                                            <a
+                                              href={t.platformLink}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="font-bold text-gray-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 truncate block"
+                                            >
+                                              {t.title}
+                                            </a>
+                                            {t.topicName && (
+                                              <span className="text-[11px] text-gray-400 mr-2">Topic: {t.topicName}</span>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 flex-shrink-0">
+                                          <span className={clsx(
+                                            "px-2 py-0.5 rounded text-[10px] font-black uppercase",
+                                            t.difficulty === 'EASY' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300" :
+                                            t.difficulty === 'MEDIUM' ? "bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300" :
+                                            "bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300"
+                                          )}>
+                                            {t.difficulty}
+                                          </span>
+                                          <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                                            +{t.xpReward} XP
+                                          </span>
+                                          <button
+                                            onClick={() => handleDeleteTask(t.id)}
+                                            className="text-gray-400 hover:text-rose-500 p-1 rounded-md transition-colors"
+                                            title="Delete this task"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </td>
+                            </tr>
+                          )}
+                        </React.Fragment>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>
@@ -857,7 +1008,7 @@ const AdminPage: React.FC = () => {
               </div>
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Description</label>
-                <textarea required rows={3} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={sheetForm.description} onChange={e => setSheetForm({...sheetForm, description: e.target.value})} placeholder="What concepts this sheet covers..." />
+                <textarea rows={3} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={sheetForm.description} onChange={e => setSheetForm({...sheetForm, description: e.target.value})} placeholder="What concepts this sheet covers..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -902,8 +1053,8 @@ const AdminPage: React.FC = () => {
                 <input required type="text" className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={taskForm.title} onChange={e => setTaskForm({...taskForm, title: e.target.value})} placeholder="e.g. 3Sum Closest" />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Description / Hints</label>
-                <textarea required rows={2} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={taskForm.description} onChange={e => setTaskForm({...taskForm, description: e.target.value})} />
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Description / Hints (Optional)</label>
+                <textarea rows={2} className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={taskForm.description} onChange={e => setTaskForm({...taskForm, description: e.target.value})} placeholder="Optional problem description or hints..." />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -925,7 +1076,7 @@ const AdminPage: React.FC = () => {
               <div className="grid grid-cols-3 gap-4">
                 <div className="col-span-2">
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">Platform Link</label>
-                  <input required type="url" className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={taskForm.platformLink} onChange={e => setTaskForm({...taskForm, platformLink: e.target.value})} />
+                  <input type="text" className="w-full bg-gray-50 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl p-2.5 dark:text-white" value={taskForm.platformLink} onChange={e => setTaskForm({...taskForm, platformLink: e.target.value})} placeholder="https://leetcode.com/problems/..." />
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-1">XP Reward</label>

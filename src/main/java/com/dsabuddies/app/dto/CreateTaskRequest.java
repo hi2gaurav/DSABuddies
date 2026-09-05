@@ -17,7 +17,6 @@ public record CreateTaskRequest(
     @NotNull(message = "Topic ID is required")
     Long topicId,
 
-    @Pattern(regexp = "^(https?://.*)?$", message = "Platform link must be a valid http or https URL")
     @Size(max = 500, message = "Platform link must not exceed 500 characters")
     String platformLink,
 

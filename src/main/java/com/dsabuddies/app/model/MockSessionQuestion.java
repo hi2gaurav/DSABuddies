@@ -22,6 +22,7 @@ public class MockSessionQuestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id")
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.SET_NULL)
     private Task task;
 
     private String customTitle;

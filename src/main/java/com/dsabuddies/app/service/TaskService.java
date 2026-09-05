@@ -23,18 +23,41 @@ public class TaskService {
     private final com.dsabuddies.app.repository.ReviewQueueRepository reviewQueueRepository;
     private final com.dsabuddies.app.repository.BookmarkRepository bookmarkRepository;
     private final com.dsabuddies.app.repository.UserNoteRepository userNoteRepository;
+    private final com.dsabuddies.app.repository.MockSessionQuestionRepository mockSessionQuestionRepository;
 
+    @org.springframework.transaction.annotation.Transactional
     public TaskDto createTask(CreateTaskRequest request) {
+        String link = request.platformLink() != null ? request.platformLink().trim() : "";
+        if (!link.isEmpty() && !link.startsWith("http://") && !link.startsWith("https://")) {
+            link = "https://" + link;
+        }
+        if (link.isEmpty()) {
+            link = "https://leetcode.com";
+        }
+
+        com.dsabuddies.app.model.Topic topic = request.topicId() != null
+                ? topicRepository.findById(request.topicId()).orElse(null)
+                : null;
+
+        com.dsabuddies.app.model.TaskSheet sheet = request.taskSheetId() != null
+                ? taskSheetRepository.findById(request.taskSheetId()).orElse(null)
+                : null;
+
         Task task = Task.builder()
-                .title(request.title())
-                .description(request.description())
+                .title(request.title().trim())
+                .description(request.description() != null ? request.description().trim() : "")
                 .difficulty(request.difficulty())
-                .platformLink(request.platformLink())
+                .platformLink(link)
                 .xpReward(request.xpReward())
-                .topic(request.topicId() != null ? topicRepository.findById(request.topicId()).orElse(null) : null)
-                .taskSheet(request.taskSheetId() != null ? taskSheetRepository.findById(request.taskSheetId()).orElse(null) : null)
+                .topic(topic)
+                .taskSheet(sheet)
                 .build();
         task = taskRepository.save(task);
+
+        if (sheet != null && sheet.getTasks() != null) {
+            sheet.getTasks().add(task);
+        }
+
         return toDto(task, null);
     }
 
@@ -50,6 +73,7 @@ public class TaskService {
 
     @org.springframework.transaction.annotation.Transactional
     public void deleteTask(Long id) {
+        mockSessionQuestionRepository.setTaskNullByTaskId(id);
         taskCompletionRepository.deleteByTaskId(id);
         reviewQueueRepository.deleteByTaskId(id);
         bookmarkRepository.deleteByTaskId(id);

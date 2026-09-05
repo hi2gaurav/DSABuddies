@@ -23,17 +23,20 @@ public class TaskSheetService {
     private final com.dsabuddies.app.repository.ReviewQueueRepository reviewQueueRepository;
     private final com.dsabuddies.app.repository.BookmarkRepository bookmarkRepository;
     private final com.dsabuddies.app.repository.UserNoteRepository userNoteRepository;
+    private final com.dsabuddies.app.repository.MockSessionQuestionRepository mockSessionQuestionRepository;
 
+    @org.springframework.transaction.annotation.Transactional
     public TaskSheetDto createTaskSheet(CreateTaskSheetRequest request, User createdBy) {
         TaskSheet sheet = TaskSheet.builder()
-                .title(request.title())
-                .description(request.description())
+                .title(request.title().trim())
+                .description(request.description() != null ? request.description().trim() : "")
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .sheetType(request.sheetType())
                 .createdBy(createdBy)
                 .build();
-        return toDto(taskSheetRepository.save(sheet), createdBy.getId());
+        sheet = taskSheetRepository.save(sheet);
+        return toDto(sheet, createdBy != null ? createdBy.getId() : null);
     }
 
     public TaskSheetDto getTaskSheetById(Long id, Long currentUserId) {
@@ -52,6 +55,7 @@ public class TaskSheetService {
 
     @org.springframework.transaction.annotation.Transactional
     public void deleteTaskSheet(Long id) {
+        mockSessionQuestionRepository.setTaskNullByTaskSheetId(id);
         taskCompletionRepository.deleteByTaskTaskSheetId(id);
         reviewQueueRepository.deleteByTaskTaskSheetId(id);
         bookmarkRepository.deleteByTaskTaskSheetId(id);

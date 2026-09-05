@@ -48,16 +48,17 @@ public class TaskSheetController {
     public ResponseEntity<TaskSheetDto> createTaskSheet(
             @jakarta.validation.Valid @RequestBody CreateTaskSheetRequest request,
             @AuthenticationPrincipal OAuth2User principal,
+            org.springframework.security.core.Authentication authentication,
             HttpServletRequest servletRequest) {
-        if (principal == null) {
-            return ResponseEntity.status(401).build();
-        }
-        User user = userService.getOrCreateUser(principal);
+        User user = userService.resolveUser(authentication, principal);
         TaskSheetDto created = taskSheetService.createTaskSheet(request, user);
 
+        String adminEmail = user != null ? user.getEmail() : UserService.ADMIN_EMAIL;
+        String adminName = user != null ? user.getName() : "Admin";
+
         auditService.logWithRequest(
-                user.getEmail(),
-                user.getName(),
+                adminEmail,
+                adminName,
                 "CREATE_SHEET",
                 "TASK_SHEET",
                 String.valueOf(created.id()),
@@ -73,9 +74,10 @@ public class TaskSheetController {
     public ResponseEntity<Void> deleteTaskSheet(
             @PathVariable Long id,
             @AuthenticationPrincipal OAuth2User principal,
+            org.springframework.security.core.Authentication authentication,
             HttpServletRequest servletRequest) {
-        User user = principal != null ? userService.getOrCreateUser(principal) : null;
-        String adminEmail = user != null ? user.getEmail() : "admin@dsabuddies.com";
+        User user = userService.resolveUser(authentication, principal);
+        String adminEmail = user != null ? user.getEmail() : UserService.ADMIN_EMAIL;
         String adminName = user != null ? user.getName() : "Admin";
 
         taskSheetService.deleteTaskSheet(id);

@@ -47,9 +47,10 @@ public class TaskController {
     public ResponseEntity<TaskDto> createTask(
             @jakarta.validation.Valid @RequestBody CreateTaskRequest request,
             @AuthenticationPrincipal OAuth2User principal,
+            org.springframework.security.core.Authentication authentication,
             HttpServletRequest servletRequest) {
-        User user = principal != null ? userService.getOrCreateUser(principal) : null;
-        String adminEmail = user != null ? user.getEmail() : "admin@dsabuddies.com";
+        User user = userService.resolveUser(authentication, principal);
+        String adminEmail = user != null ? user.getEmail() : UserService.ADMIN_EMAIL;
         String adminName = user != null ? user.getName() : "Admin";
 
         TaskDto created = taskService.createTask(request);
@@ -72,9 +73,10 @@ public class TaskController {
     public ResponseEntity<Void> deleteTask(
             @PathVariable Long id,
             @AuthenticationPrincipal OAuth2User principal,
+            org.springframework.security.core.Authentication authentication,
             HttpServletRequest servletRequest) {
-        User user = principal != null ? userService.getOrCreateUser(principal) : null;
-        String adminEmail = user != null ? user.getEmail() : "admin@dsabuddies.com";
+        User user = userService.resolveUser(authentication, principal);
+        String adminEmail = user != null ? user.getEmail() : UserService.ADMIN_EMAIL;
         String adminName = user != null ? user.getName() : "Admin";
 
         taskService.deleteTask(id);
