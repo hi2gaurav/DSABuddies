@@ -37,6 +37,8 @@ public class DailyContentDto {
         private String optimalApproach;
         private String timeComplexity;
         private String spaceComplexity;
+        private String detailedSolution;
+        private List<String> companies;
     }
 
     @Data
@@ -52,6 +54,7 @@ public class DailyContentDto {
         private List<String> coreRequirements;
         private List<String> designPatternsOrComponents;
         private String architectureSummary;
+        private String detailedSolution;
     }
 
     @Data
@@ -66,5 +69,6 @@ public class DailyContentDto {
         private String answer;
         private List<String> keyPoints;
         private String codeSnippet;
+        private String detailedSolution;
     }
 }

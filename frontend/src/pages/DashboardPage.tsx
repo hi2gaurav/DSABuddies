@@ -51,18 +51,56 @@ const DashboardPage: React.FC = () => {
   }, []);
 
   const handleTaskClick = async (task: Task) => {
-    if (task.completed) {
-      // Uncomplete directly
+    const wasCompleted = task.completed;
+
+    // 1. Instant optimistic state update — zero lag, button turns green immediately
+    setData((prev) => {
+      if (!prev) return prev;
+      const updatedTasks = prev.activeSheet?.tasks.map((t) =>
+        t.id === task.id ? { ...t, completed: !wasCompleted } : t
+      ) || [];
+      const newCompletedCount = updatedTasks.filter((t) => t.completed).length;
+      const total = prev.totalTasks || updatedTasks.length || 1;
+      const newPct = Math.round((newCompletedCount / total) * 100);
+      const xpDelta = wasCompleted ? -task.xpReward : task.xpReward;
+
+      return {
+        ...prev,
+        tasksCompleted: newCompletedCount,
+        completionPercentage: newPct,
+        totalXp: Math.max(0, prev.totalXp + xpDelta),
+        activeSheet: prev.activeSheet ? { ...prev.activeSheet, tasks: updatedTasks } : prev.activeSheet,
+      };
+    });
+
+    if (wasCompleted) {
+      // Uncomplete
       try {
         await api.uncompleteTask(task.id);
         show('Problem marked incomplete', 'info');
         fetchDashboard();
       } catch (error) {
-        show('Action failed', 'error');
+        show('Failed to update status, reverting...', 'error');
+        fetchDashboard();
       }
     } else {
-      // Open solution modal for completing
-      setSelectedTaskForCompletion(task);
+      // Mark completed immediately — no delay, no full-screen blur modal
+      setRewardXp(task.xpReward);
+      show(`Task completed! +${task.xpReward} XP earned ⭐`, 'success');
+
+      try {
+        const res = await api.completeTask(task.id, {});
+        if (res.levelUp) {
+          setLevelUpData({ level: res.newLevel || 1, title: res.newTitle || 'Novice' });
+        }
+        if (res.newBadges && res.newBadges.length > 0) {
+          setNewBadges(res.newBadges);
+        }
+        fetchDashboard();
+      } catch (error) {
+        show('Failed to complete task, reverting...', 'error');
+        fetchDashboard();
+      }
     }
   };
 

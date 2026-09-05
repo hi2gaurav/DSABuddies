@@ -70,6 +70,14 @@ export const api = {
   getMembers: () => fetchApi<User[]>('/api/admin/members'),
   updateMemberRole: (id: number, role: string) => fetchApi<void>(`/api/admin/members/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
   getDailyContent: () => fetchApi<DailyContent>('/api/admin/daily-content'),
+  refreshDailyContent: () => fetchApi<DailyContent>('/api/admin/daily-content/refresh', { method: 'POST' }),
+
+  // AI Jeetu Bhaiya Assistant
+  chatWithJeetuBhaiya: (messages: { role: string; content: string }[]) =>
+    fetchApi<{ reply: string }>('/api/ai/jeetu-bhaiya', {
+      method: 'POST',
+      body: JSON.stringify({ messages }),
+    }),
   
   // Topics
   getTopics: () => fetchApi<Topic[]>('/api/topics'),

@@ -4,6 +4,7 @@ import { AnimatePresence } from 'framer-motion';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import PageTransition from '../common/PageTransition';
+import JeetuBhaiyaChat from '../chat/JeetuBhaiyaChat';
 
 const DashboardLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -26,6 +27,9 @@ const DashboardLayout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Floating Jeetu Bhaiya AI Assistant */}
+      <JeetuBhaiyaChat />
     </div>
   );
 };

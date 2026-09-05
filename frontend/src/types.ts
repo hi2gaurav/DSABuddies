@@ -111,6 +111,8 @@ export interface LeetCodeProblem {
   optimalApproach: string;
   timeComplexity: string;
   spaceComplexity: string;
+  detailedSolution?: string;
+  companies?: string[];
 }
 
 export interface DesignTopic {
@@ -122,6 +124,7 @@ export interface DesignTopic {
   coreRequirements: string[];
   designPatternsOrComponents: string[];
   architectureSummary: string;
+  detailedSolution?: string;
 }
 
 export interface InterviewQuestion {
@@ -132,6 +135,7 @@ export interface InterviewQuestion {
   answer: string;
   keyPoints?: string[];
   codeSnippet?: string;
+  detailedSolution?: string;
 }
 
 export interface DailyContent {

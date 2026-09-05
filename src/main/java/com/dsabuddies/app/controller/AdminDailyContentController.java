@@ -15,18 +15,28 @@ import java.time.LocalDate;
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN') or hasAuthority('ROLE_ADMIN') or @userService.isAdmin(authentication)")
 public class AdminDailyContentController {
 
     private final DailyContentService dailyContentService;
 
     @GetMapping("/daily-content")
-    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DailyContentDto> getDailyContent(
             @RequestParam(value = "date", required = false) String dateStr) {
         LocalDate date = (dateStr != null && !dateStr.isBlank()) 
                 ? LocalDate.parse(dateStr) 
                 : LocalDate.now();
         DailyContentDto content = dailyContentService.getDailyContent(date);
+        return ResponseEntity.ok(content);
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/daily-content/refresh")
+    public ResponseEntity<DailyContentDto> refreshDailyContent(
+            @RequestParam(value = "date", required = false) String dateStr) {
+        LocalDate date = (dateStr != null && !dateStr.isBlank()) 
+                ? LocalDate.parse(dateStr) 
+                : LocalDate.now();
+        DailyContentDto content = dailyContentService.refreshContent(date);
         return ResponseEntity.ok(content);
     }
 }

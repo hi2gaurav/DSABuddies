@@ -22,30 +22,51 @@ import {
   BookOpen,
   Lightbulb,
   Clock,
-  HardDrive
+  HardDrive,
+  RefreshCw,
+  Building2,
+  FileCode
 } from 'lucide-react';
 
 export const AdminDailyPrepHub: React.FC = () => {
   const [content, setContent] = useState<DailyContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'leetcode' | 'lld' | 'hld' | 'java' | 'spring' | 'database' | 'cs'>('leetcode');
   const [expandedQuestions, setExpandedQuestions] = useState<Record<number, boolean>>({});
+  const [questionTab, setQuestionTab] = useState<Record<number, 'summary' | 'solution'>>({});
+  const [leetCodeView, setLeetCodeView] = useState<'overview' | 'solution'>('overview');
+  const [lldView, setLldView] = useState<'overview' | 'solution'>('overview');
+  const [hldView, setHldView] = useState<'overview' | 'solution'>('overview');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const fetchDailyContent = async () => {
+    try {
+      setLoading(true);
+      const data = await api.getDailyContent();
+      setContent(data);
+    } catch (err: any) {
+      console.error('Failed to load admin daily content', err);
+      setError('Failed to load daily prep content.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const data = await api.refreshDailyContent();
+      setContent(data);
+    } catch (err: any) {
+      console.error('Failed to refresh admin daily content', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchDailyContent = async () => {
-      try {
-        setLoading(true);
-        const data = await api.getDailyContent();
-        setContent(data);
-      } catch (err: any) {
-        console.error('Failed to load admin daily content', err);
-        setError('Failed to load daily prep content.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchDailyContent();
   }, []);
 
@@ -180,31 +201,87 @@ export const AdminDailyPrepHub: React.FC = () => {
                 {/* Expanded Answer */}
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-1 border-t border-gray-100 dark:border-slate-700/50 space-y-3">
-                    <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
-                      {q.answer}
+                    {/* Sub-Tabs: Quick Summary vs Detailed Solution */}
+                    <div className="flex items-center gap-2 border-b border-gray-100 dark:border-slate-700/60 pb-2">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuestionTab((prev) => ({ ...prev, [q.id]: 'summary' }));
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                          (questionTab[q.id] || 'summary') === 'summary'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        Quick Summary
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setQuestionTab((prev) => ({ ...prev, [q.id]: 'solution' }));
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                          questionTab[q.id] === 'solution'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs'
+                            : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>Detailed Solution & Walkthrough</span>
+                      </button>
                     </div>
 
-                    {/* Key points */}
-                    {q.keyPoints && q.keyPoints.length > 0 && (
-                      <div className="p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30">
-                        <div className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1.5">
-                          <Lightbulb className="w-3.5 h-3.5" />
-                          <span>Key Takeaways for Interviews:</span>
+                    {(questionTab[q.id] || 'summary') === 'summary' ? (
+                      <>
+                        <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line leading-relaxed">
+                          {q.answer}
                         </div>
-                        <ul className="list-disc list-inside space-y-1 text-xs text-amber-900 dark:text-amber-200/80">
-                          {q.keyPoints.map((kp, kIdx) => (
-                            <li key={kIdx}>{kp}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
 
-                    {/* Code snippet */}
-                    {q.codeSnippet && (
-                      <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-slate-900 p-3">
-                        <pre className="text-xs text-emerald-400 font-mono overflow-x-auto whitespace-pre">
-                          {q.codeSnippet}
-                        </pre>
+                        {/* Key points */}
+                        {q.keyPoints && q.keyPoints.length > 0 && (
+                          <div className="p-3 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-800/30">
+                            <div className="text-xs font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 mb-1.5">
+                              <Lightbulb className="w-3.5 h-3.5" />
+                              <span>Key Takeaways for Interviews:</span>
+                            </div>
+                            <ul className="list-disc list-inside space-y-1 text-xs text-amber-900 dark:text-amber-200/80">
+                              {q.keyPoints.map((kp, kIdx) => (
+                                <li key={kIdx}>{kp}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Code snippet */}
+                        {q.codeSnippet && (
+                          <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-slate-900 p-3">
+                            <pre className="text-xs text-emerald-400 font-mono overflow-x-auto whitespace-pre">
+                              {q.codeSnippet}
+                            </pre>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="p-4 rounded-xl bg-slate-900 text-slate-100 border border-slate-700/80 space-y-3 font-sans">
+                        <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                          <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" /> Comprehensive Interview Solution
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(q.detailedSolution || q.answer, `detailed-${q.id}`)}
+                            className="text-xs text-gray-400 hover:text-white flex items-center gap-1"
+                          >
+                            {copiedId === `detailed-${q.id}` ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                            <span>Copy Solution</span>
+                          </button>
+                        </div>
+                        <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed">
+                          {q.detailedSolution || q.answer}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -242,8 +319,17 @@ export const AdminDailyPrepHub: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-xs px-3 py-1 rounded-lg bg-white dark:bg-slate-700/80 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-200 font-semibold shadow-xs">
-            ✨ Auto-refreshed Daily
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="text-xs px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shadow-xs transition-all flex items-center gap-1.5 disabled:opacity-50 btn-press"
+            title="Refresh questions to align with latest interview trends"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+            <span>{refreshing ? 'Refreshing...' : 'Refresh Today\'s Questions'}</span>
+          </button>
+          <span className="text-xs px-3 py-1.5 rounded-xl bg-white dark:bg-slate-700/80 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-gray-200 font-semibold shadow-xs">
+            ✨ Auto-refreshed Daily at 12:00 AM
           </span>
         </div>
       </div>
@@ -287,60 +373,115 @@ export const AdminDailyPrepHub: React.FC = () => {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-transparent p-4 rounded-xl border border-amber-500/20">
               <div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <Badge variant={content.leetCodeProblem.difficulty.toLowerCase() as any}>
                     {content.leetCodeProblem.difficulty}
                   </Badge>
                   <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                     {content.leetCodeProblem.topic}
                   </span>
+                  {content.leetCodeProblem.companies && content.leetCodeProblem.companies.length > 0 && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                      <Building2 className="w-3 h-3" />
+                      Asked by: {content.leetCodeProblem.companies.join(', ')}
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                   {content.leetCodeProblem.title}
                 </h3>
               </div>
 
-              <a
-                href={content.leetCodeProblem.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-sm shadow-amber-500/20 flex-shrink-0"
-              >
-                <span>Solve on LeetCode</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+              <div className="flex items-center gap-2 flex-wrap">
+                <a
+                  href={content.leetCodeProblem.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-sm shadow-amber-500/20 flex-shrink-0"
+                >
+                  <span>Solve on LeetCode</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Problem Statement</span>
-                </h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {content.leetCodeProblem.problemSummary}
-                </p>
-              </div>
+            {/* View Toggle */}
+            <div className="flex items-center gap-2 border-b border-gray-200 dark:border-slate-700 pb-2">
+              <button
+                onClick={() => setLeetCodeView('overview')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  leetCodeView === 'overview'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                Problem Overview
+              </button>
+              <button
+                onClick={() => setLeetCodeView('solution')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  leetCodeView === 'solution'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Detailed Solution & Code Walkthrough</span>
+              </button>
+            </div>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
-                  <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Optimal Approach & Strategy</span>
-                </h4>
-                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
-                  {content.leetCodeProblem.optimalApproach}
-                </p>
+            {leetCodeView === 'overview' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Problem Statement</span>
+                  </h4>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {content.leetCodeProblem.problemSummary}
+                  </p>
+                </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center gap-4 flex-wrap text-xs">
-                  <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                    ⏱ Time: {content.leetCodeProblem.timeComplexity}
-                  </span>
-                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">
-                    💾 Space: {content.leetCodeProblem.spaceComplexity}
-                  </span>
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2 flex items-center gap-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Optimal Approach & Strategy</span>
+                  </h4>
+                  <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {content.leetCodeProblem.optimalApproach}
+                  </p>
+
+                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60 flex items-center gap-4 flex-wrap text-xs">
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      ⏱ Time: {content.leetCodeProblem.timeComplexity}
+                    </span>
+                    <span className="font-semibold text-indigo-600 dark:text-indigo-400">
+                      💾 Space: {content.leetCodeProblem.spaceComplexity}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700/80 text-slate-100 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <FileCode className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm font-bold text-white">Full Optimal Solution & Complexity Analysis</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(content.leetCodeProblem.detailedSolution || content.leetCodeProblem.optimalApproach, 'lc-solution')}
+                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 px-3 py-1 bg-slate-800 rounded-lg border border-slate-700"
+                  >
+                    {copiedId === 'lc-solution' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedId === 'lc-solution' ? 'Copied!' : 'Copy Code & Solution'}</span>
+                  </button>
+                </div>
+                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-mono">
+                  {content.leetCodeProblem.detailedSolution || content.leetCodeProblem.optimalApproach}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -361,40 +502,87 @@ export const AdminDailyPrepHub: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-blue-500" />
-                  <span>Core Functional Requirements</span>
-                </h4>
-                <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
-                  {content.lldTopic.coreRequirements.map((req, idx) => (
-                    <li key={idx} className="leading-relaxed">{req}</li>
-                  ))}
-                </ul>
-              </div>
+            {/* LLD View Toggle */}
+            <div className="flex items-center gap-2 border-b border-gray-200 dark:border-slate-700 pb-2">
+              <button
+                onClick={() => setLldView('overview')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  lldView === 'overview'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                Requirements & Patterns
+              </button>
+              <button
+                onClick={() => setLldView('solution')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  lldView === 'solution'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Detailed Architecture Walkthrough</span>
+              </button>
+            </div>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
-                  <Code2 className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Design Patterns Applied</span>
-                </h4>
-                <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
-                  {content.lldTopic.designPatternsOrComponents.map((pat, idx) => (
-                    <li key={idx} className="leading-relaxed">{pat}</li>
-                  ))}
-                </ul>
+            {lldView === 'overview' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
+                    <Layers className="w-3.5 h-3.5 text-blue-500" />
+                    <span>Core Functional Requirements</span>
+                  </h4>
+                  <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
+                    {content.lldTopic.coreRequirements.map((req, idx) => (
+                      <li key={idx} className="leading-relaxed">{req}</li>
+                    ))}
+                  </ul>
+                </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60">
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">
-                    Class Hierarchy Summary:
-                  </span>
-                  <p className="text-xs text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 p-2.5 rounded-lg font-mono">
-                    {content.lldTopic.architectureSummary}
-                  </p>
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
+                    <Code2 className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Design Patterns Applied</span>
+                  </h4>
+                  <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
+                    {content.lldTopic.designPatternsOrComponents.map((pat, idx) => (
+                      <li key={idx} className="leading-relaxed">{pat}</li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60">
+                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">
+                      Class Hierarchy Summary:
+                    </span>
+                    <p className="text-xs text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:bg-indigo-950/40 p-2.5 rounded-lg font-mono">
+                      {content.lldTopic.architectureSummary}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700/80 text-slate-100 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-blue-400" />
+                    <span className="text-sm font-bold text-white">Full LLD Class Design & Trade-offs</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(content.lldTopic.detailedSolution || content.lldTopic.architectureSummary, 'lld-solution')}
+                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 px-3 py-1 bg-slate-800 rounded-lg border border-slate-700"
+                  >
+                    {copiedId === 'lld-solution' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedId === 'lld-solution' ? 'Copied!' : 'Copy Architecture'}</span>
+                  </button>
+                </div>
+                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans">
+                  {content.lldTopic.detailedSolution || content.lldTopic.architectureSummary}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -415,40 +603,87 @@ export const AdminDailyPrepHub: React.FC = () => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-purple-500" />
-                  <span>High-Scale System Requirements</span>
-                </h4>
-                <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
-                  {content.hldTopic.coreRequirements.map((req, idx) => (
-                    <li key={idx} className="leading-relaxed">{req}</li>
-                  ))}
-                </ul>
-              </div>
+            {/* HLD View Toggle */}
+            <div className="flex items-center gap-2 border-b border-gray-200 dark:border-slate-700 pb-2">
+              <button
+                onClick={() => setHldView('overview')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  hldView === 'overview'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                High-Scale Overview
+              </button>
+              <button
+                onClick={() => setHldView('solution')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  hldView === 'solution'
+                    ? 'bg-amber-500 text-slate-950 shadow-xs'
+                    : 'bg-gray-100 dark:bg-slate-700/80 text-gray-600 dark:text-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Detailed System Architecture</span>
+              </button>
+            </div>
 
-              <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
-                  <HardDrive className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Architecture Building Blocks</span>
-                </h4>
-                <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
-                  {content.hldTopic.designPatternsOrComponents.map((pat, idx) => (
-                    <li key={idx} className="leading-relaxed">{pat}</li>
-                  ))}
-                </ul>
+            {hldView === 'overview' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
+                    <Cpu className="w-3.5 h-3.5 text-purple-500" />
+                    <span>High-Scale System Requirements</span>
+                  </h4>
+                  <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
+                    {content.hldTopic.coreRequirements.map((req, idx) => (
+                      <li key={idx} className="leading-relaxed">{req}</li>
+                    ))}
+                  </ul>
+                </div>
 
-                <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60">
-                  <span className="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">
-                    End-to-End Data Pipeline:
-                  </span>
-                  <p className="text-xs text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 p-2.5 rounded-lg font-mono">
-                    {content.hldTopic.architectureSummary}
-                  </p>
+                <div className="p-4 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700/60">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3 flex items-center gap-1.5">
+                    <HardDrive className="w-3.5 h-3.5 text-indigo-500" />
+                    <span>Architecture Building Blocks</span>
+                  </h4>
+                  <ul className="space-y-2 text-xs sm:text-sm text-gray-700 dark:text-gray-300 list-disc list-inside">
+                    {content.hldTopic.designPatternsOrComponents.map((pat, idx) => (
+                      <li key={idx} className="leading-relaxed">{pat}</li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-4 pt-3 border-t border-gray-200 dark:border-slate-700/60">
+                    <span className="text-xs font-bold text-gray-500 dark:text-gray-400 block mb-1">
+                      End-to-End Data Pipeline:
+                    </span>
+                    <p className="text-xs text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 p-2.5 rounded-lg font-mono">
+                      {content.hldTopic.architectureSummary}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="p-5 rounded-2xl bg-slate-900 border border-slate-700/80 text-slate-100 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <Cpu className="w-4 h-4 text-purple-400" />
+                    <span className="text-sm font-bold text-white">Full System Architecture & Scaling Blueprint</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => copyToClipboard(content.hldTopic.detailedSolution || content.hldTopic.architectureSummary, 'hld-solution')}
+                    className="text-xs text-gray-400 hover:text-white flex items-center gap-1.5 px-3 py-1 bg-slate-800 rounded-lg border border-slate-700"
+                  >
+                    {copiedId === 'hld-solution' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedId === 'hld-solution' ? 'Copied!' : 'Copy Architecture'}</span>
+                  </button>
+                </div>
+                <div className="text-xs sm:text-sm text-slate-200 whitespace-pre-line leading-relaxed font-sans">
+                  {content.hldTopic.detailedSolution || content.hldTopic.architectureSummary}
+                </div>
+              </div>
+            )}
           </div>
         )}
 

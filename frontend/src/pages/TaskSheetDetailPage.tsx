@@ -50,16 +50,46 @@ const TaskSheetDetailPage: React.FC = () => {
   }, [id]);
 
   const handleTaskClick = async (task: Task) => {
-    if (task.completed) {
+    const wasCompleted = task.completed;
+
+    // 1. Instant optimistic state update
+    setSheet((prev) => {
+      if (!prev) return prev;
+      const updatedTasks = prev.tasks.map((t) =>
+        t.id === task.id ? { ...t, completed: !wasCompleted } : t
+      );
+      return {
+        ...prev,
+        tasks: updatedTasks,
+      };
+    });
+
+    if (wasCompleted) {
       try {
         await api.uncompleteTask(task.id);
         show('Problem marked incomplete', 'info');
         fetchSheet();
       } catch (error) {
-        show('Action failed', 'error');
+        show('Failed to update status, reverting...', 'error');
+        fetchSheet();
       }
     } else {
-      setSelectedTaskForCompletion(task);
+      setRewardXp(task.xpReward);
+      show(`Task completed! +${task.xpReward} XP earned ⭐`, 'success');
+
+      try {
+        const res = await api.completeTask(task.id, {});
+        if (res.levelUp) {
+          setLevelUpData({ level: res.newLevel || 1, title: res.newTitle || 'Novice' });
+        }
+        if (res.newBadges && res.newBadges.length > 0) {
+          setNewBadges(res.newBadges);
+        }
+        fetchSheet();
+      } catch (error) {
+        show('Failed to complete task, reverting...', 'error');
+        fetchSheet();
+      }
     }
   };
 

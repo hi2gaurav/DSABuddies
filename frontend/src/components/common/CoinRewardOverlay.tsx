@@ -15,7 +15,7 @@ export const CoinRewardOverlay: React.FC<CoinRewardOverlayProps> = ({ xp, onComp
     const timer = setTimeout(() => {
       setVisible(false);
       onComplete?.();
-    }, 2400);
+    }, 1200);
 
     return () => clearTimeout(timer);
   }, [onComplete]);
@@ -24,9 +24,6 @@ export const CoinRewardOverlay: React.FC<CoinRewardOverlayProps> = ({ xp, onComp
 
   return (
     <div className="fixed inset-0 z-50 pointer-events-none flex items-center justify-center">
-      {/* Background radial flash */}
-      <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] animate-fade-in transition-opacity" />
-
       {/* Floating Animated Coin Container */}
       <div className="relative flex flex-col items-center animate-coin-pop">
         {/* Glow halo */}

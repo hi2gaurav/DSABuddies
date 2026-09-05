@@ -131,4 +131,39 @@ class DailyContentServiceTest {
             assertEquals(10, content.getCsSubjectsQuestions().size());
         }
     }
+
+    @Test
+    @DisplayName("Should ensure detailedSolution is present across all questions, LeetCode, LLD, and HLD")
+    void testDetailedSolutionsPresent() {
+        LocalDate date = LocalDate.now();
+        DailyContentDto content = dailyContentService.getDailyContent(date);
+
+        assertNotNull(content.getLeetCodeProblem().getDetailedSolution(), "LeetCode detailed solution must be present");
+        assertFalse(content.getLeetCodeProblem().getDetailedSolution().isBlank());
+
+        assertNotNull(content.getLldTopic().getDetailedSolution(), "LLD detailed solution must be present");
+        assertFalse(content.getLldTopic().getDetailedSolution().isBlank());
+
+        assertNotNull(content.getHldTopic().getDetailedSolution(), "HLD detailed solution must be present");
+        assertFalse(content.getHldTopic().getDetailedSolution().isBlank());
+
+        for (DailyContentDto.InterviewQuestion q : content.getJavaQuestions()) {
+            assertNotNull(q.getDetailedSolution(), "Java question detailed solution must be present");
+            assertFalse(q.getDetailedSolution().isBlank());
+        }
+    }
+
+    @Test
+    @DisplayName("Should support midnight cache refresh and manual refresh")
+    void testMidnightAndManualRefresh() {
+        LocalDate today = LocalDate.now();
+        DailyContentDto initial = dailyContentService.getDailyContent(today);
+
+        dailyContentService.refreshDailyMidnightContent();
+        DailyContentDto afterMidnight = dailyContentService.getDailyContent(today);
+        assertNotNull(afterMidnight);
+
+        DailyContentDto refreshed = dailyContentService.refreshContent(today);
+        assertNotNull(refreshed);
+    }
 }
