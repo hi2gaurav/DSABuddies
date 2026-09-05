@@ -1,5 +1,6 @@
 import React from 'react';
 import { Menu, Sun, Moon, Bell, LogOut, User as UserIcon, Flame } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../hooks/useTheme';
 import { useAuth } from '../../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -26,86 +27,110 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-700">
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4">
+    <header className="sticky top-0 z-20 glass border-b border-gray-200/80 dark:border-slate-800/80 shadow-xs transition-colors">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-3.5">
         <div className="flex items-center gap-4">
           <button 
             onClick={toggleSidebar}
-            className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg md:hidden"
+            className="p-2 -ml-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl md:hidden btn-press transition-colors"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-semibold dark:text-white hidden sm:block">
-            {getPageTitle()}
-          </h1>
+          <div className="hidden sm:flex items-center gap-2.5">
+            <h1 className="text-xl font-black tracking-tight text-gray-900 dark:text-white">
+              {getPageTitle()}
+            </h1>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* User Streak Badge */}
+        <div className="flex items-center gap-2.5 sm:gap-4">
+          {/* User Streak Badge with Flame Animation */}
           {user && (
-            <div 
-              className="flex items-center gap-1.5 px-3 py-1 bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 rounded-full text-xs font-bold shadow-xs hover:border-orange-500/40 transition-all cursor-default"
+            <motion.div 
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-gradient-to-r from-orange-500/15 via-amber-500/10 to-orange-500/5 border border-orange-500/30 text-orange-600 dark:text-orange-400 rounded-full text-xs font-black shadow-xs cursor-default backdrop-blur-xs select-none"
               title={`Active Streak: ${user.currentStreak || 0} consecutive days`}
             >
-              <Flame className="w-4 h-4 fill-orange-500 text-orange-500 animate-pulse" />
-              <span>{user.currentStreak || 0} {user.currentStreak === 1 ? 'Day' : 'Days'}</span>
-            </div>
+              <div className="relative">
+                <Flame className="w-4 h-4 fill-orange-500 text-orange-500 animate-pulse" />
+                <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-amber-400 rounded-full animate-ping" />
+              </div>
+              <span className="tracking-tight">{user.currentStreak || 0} {user.currentStreak === 1 ? 'Day' : 'Days'}</span>
+            </motion.div>
           )}
 
-          <button 
+          {/* Theme Toggle Button with Rotation Animation */}
+          <motion.button 
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.92, rotate: 180 }}
             onClick={toggleTheme}
-            className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors"
+            className="p-2.5 text-gray-500 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors border border-transparent hover:border-gray-200 dark:hover:border-slate-700"
             title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+            {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+          </motion.button>
           
-          <button className="p-2 text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors relative">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+          <button className="p-2.5 text-gray-500 hover:bg-gray-100/80 dark:hover:bg-slate-800/80 rounded-xl transition-colors relative border border-transparent hover:border-gray-200 dark:hover:border-slate-700 btn-press">
+            <Bell className="w-4 h-4" />
+            <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
           </button>
 
+          {/* User Profile Dropdown */}
           <div className="relative">
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 p-1 pl-2 pr-3 bg-gray-100 dark:bg-slate-800 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+              className="flex items-center gap-2 p-1 pl-1.5 pr-3 bg-gray-100/80 dark:bg-slate-800/80 border border-gray-200/60 dark:border-slate-700/60 rounded-full hover:bg-gray-200/80 dark:hover:bg-slate-700 transition-all shadow-2xs"
             >
               <img 
-                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name || 'User'}`} 
+                src={user?.avatarUrl || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=3b82f6&color=fff`} 
                 alt="Avatar" 
-                className="w-8 h-8 rounded-full bg-blue-500"
+                className="w-7 h-7 rounded-full object-cover ring-2 ring-blue-500/30"
               />
-              <span className="text-sm font-medium dark:text-white hidden sm:block">
+              <span className="text-xs font-bold text-gray-800 dark:text-gray-200 hidden sm:block">
                 {user?.name.split(' ')[0]}
               </span>
-            </button>
+            </motion.button>
 
-            {dropdownOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 z-10" 
-                  onClick={() => setDropdownOpen(false)}
-                />
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-700 z-20 py-1 overflow-hidden">
-                  <div className="px-4 py-2 border-b border-gray-100 dark:border-slate-700 sm:hidden">
-                    <p className="text-sm font-medium dark:text-white">{user?.name}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
-                  </div>
-                  <button 
-                    onClick={() => { navigate('/profile'); setDropdownOpen(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 flex items-center gap-2"
+            <AnimatePresence>
+              {dropdownOpen && (
+                <>
+                  <div 
+                    className="fixed inset-0 z-10" 
+                    onClick={() => setDropdownOpen(false)}
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute right-0 mt-2 w-52 glass-card rounded-2xl shadow-xl border border-gray-200/80 dark:border-slate-700/80 z-20 py-1.5 overflow-hidden"
                   >
-                    <UserIcon className="w-4 h-4" /> Profile
-                  </button>
-                  <button 
-                    onClick={() => { logout(); setDropdownOpen(false); }}
-                    className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
-                  >
-                    <LogOut className="w-4 h-4" /> Sign out
-                  </button>
-                </div>
-              </>
-            )}
+                    <div className="px-4 py-2.5 border-b border-gray-100 dark:border-slate-700/80">
+                      <p className="text-xs font-bold text-gray-900 dark:text-white truncate">{user?.name}</p>
+                      <p className="text-[11px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{user?.email}</p>
+                      <span className="mt-1.5 inline-block text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+                        {user?.role === 'ROLE_ADMIN' ? '⚡ Administrator' : 'Member'}
+                      </span>
+                    </div>
+                    <button 
+                      onClick={() => { navigate('/profile'); setDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 hover:bg-blue-50/70 dark:hover:bg-slate-700/60 flex items-center gap-2.5 transition-colors"
+                    >
+                      <UserIcon className="w-3.5 h-3.5 text-blue-500" /> My Profile
+                    </button>
+                    <button 
+                      onClick={() => { logout(); setDropdownOpen(false); }}
+                      className="w-full text-left px-4 py-2 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50/70 dark:hover:bg-red-900/20 flex items-center gap-2.5 transition-colors"
+                    >
+                      <LogOut className="w-3.5 h-3.5" /> Sign out
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

@@ -9,6 +9,8 @@ import LoadingSpinner from '../components/ui/LoadingSpinner';
 import ActivityHeatmap from '../components/profile/ActivityHeatmap';
 import TopicProgressCard from '../components/profile/TopicProgressCard';
 import AchievementsList from '../components/profile/AchievementsList';
+import AnimatedNumber from '../components/common/AnimatedNumber';
+import { motion } from 'framer-motion';
 import { Calendar, Flame, Star, Trophy, Target } from 'lucide-react';
 
 const ProfilePage: React.FC = () => {
@@ -88,29 +90,45 @@ const ProfilePage: React.FC = () => {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="p-5 text-center bg-gradient-to-br from-white to-amber-50/30 dark:from-slate-800 dark:to-slate-850">
-          <Star className="w-7 h-7 text-amber-500 mx-auto mb-1.5" />
-          <h3 className="text-3xl font-bold dark:text-white">{profile.totalXp}</h3>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Total XP</p>
-        </Card>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="p-5 text-center bg-gradient-to-br from-white to-amber-50/40 dark:from-slate-800 dark:to-slate-850 border border-amber-100 dark:border-slate-700/60 shadow-xs h-full">
+            <Star className="w-7 h-7 text-amber-500 mx-auto mb-1.5 fill-amber-500/20" />
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white">
+              <AnimatedNumber value={profile.totalXp} />
+            </h3>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-wider">Total XP</p>
+          </Card>
+        </motion.div>
         
-        <Card className="p-5 text-center bg-gradient-to-br from-white to-orange-50/30 dark:from-slate-800 dark:to-slate-850">
-          <Flame className="w-7 h-7 text-orange-500 mx-auto mb-1.5" />
-          <h3 className="text-3xl font-bold dark:text-white">{profile.currentStreak}</h3>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Current Streak</p>
-        </Card>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="p-5 text-center bg-gradient-to-br from-white to-orange-50/40 dark:from-slate-800 dark:to-slate-850 border border-orange-100 dark:border-slate-700/60 shadow-xs h-full">
+            <Flame className="w-7 h-7 text-orange-500 mx-auto mb-1.5 fill-orange-500/20" />
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white">
+              <AnimatedNumber value={profile.currentStreak} />
+            </h3>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-wider">Current Streak</p>
+          </Card>
+        </motion.div>
         
-        <Card className="p-5 text-center bg-gradient-to-br from-white to-blue-50/30 dark:from-slate-800 dark:to-slate-850">
-          <Trophy className="w-7 h-7 text-blue-500 mx-auto mb-1.5" />
-          <h3 className="text-3xl font-bold dark:text-white">{profile.maxStreak}</h3>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Best Streak</p>
-        </Card>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="p-5 text-center bg-gradient-to-br from-white to-blue-50/40 dark:from-slate-800 dark:to-slate-850 border border-blue-100 dark:border-slate-700/60 shadow-xs h-full">
+            <Trophy className="w-7 h-7 text-blue-500 mx-auto mb-1.5" />
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white">
+              <AnimatedNumber value={profile.maxStreak} />
+            </h3>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-wider">Best Streak</p>
+          </Card>
+        </motion.div>
         
-        <Card className="p-5 text-center bg-gradient-to-br from-white to-emerald-50/30 dark:from-slate-800 dark:to-slate-850">
-          <Target className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
-          <h3 className="text-3xl font-bold dark:text-white">{totalSolved}</h3>
-          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mt-0.5">Problems Solved</p>
-        </Card>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="p-5 text-center bg-gradient-to-br from-white to-emerald-50/40 dark:from-slate-800 dark:to-slate-850 border border-emerald-100 dark:border-slate-700/60 shadow-xs h-full">
+            <Target className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
+            <h3 className="text-3xl font-black text-gray-900 dark:text-white">
+              <AnimatedNumber value={totalSolved} />
+            </h3>
+            <p className="text-xs font-bold text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-wider">Problems Solved</p>
+          </Card>
+        </motion.div>
       </div>
 
       {/* Milestone Achievements */}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Star, Sparkles } from 'lucide-react';
+import { triggerCelebrationConfetti } from '../../lib/confetti';
 
 interface CoinRewardOverlayProps {
   xp: number;
@@ -10,6 +11,7 @@ export const CoinRewardOverlay: React.FC<CoinRewardOverlayProps> = ({ xp, onComp
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    triggerCelebrationConfetti();
     const timer = setTimeout(() => {
       setVisible(false);
       onComplete?.();

@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { api } from '../lib/api';
 import { DashboardData, Task } from '../types';
 import { useAuth } from '../hooks/useAuth';
-import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { DashboardSkeleton } from '../components/common/SkeletonLoader';
+import AnimatedNumber from '../components/common/AnimatedNumber';
 import ProgressRing from '../components/dashboard/ProgressRing';
 import MiniLeaderboard from '../components/dashboard/MiniLeaderboard';
 import AdminDailyPrepHub from '../components/dashboard/AdminDailyPrepHub';
@@ -10,7 +12,7 @@ import CoinRewardOverlay from '../components/common/CoinRewardOverlay';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import SolutionModal from '../components/tasks/SolutionModal';
-import { ExternalLink, Star, Search, CheckCircle2, Circle, Trophy, Target } from 'lucide-react';
+import { ExternalLink, Star, Search, CheckCircle2, Circle, Trophy, Target, Zap } from 'lucide-react';
 import { useToast } from '../components/ui/Toast';
 import { toSafeUrl } from '../lib/security';
 
@@ -77,36 +79,51 @@ const DashboardPage: React.FC = () => {
     });
   }, [data?.activeSheet?.tasks, searchQuery, difficultyFilter]);
 
-  if (loading) return <div className="py-20"><LoadingSpinner size="lg" /></div>;
-  if (!data) return <div>Error loading dashboard.</div>;
+  if (loading) return <DashboardSkeleton />;
+  if (!data) return <div className="p-8 text-center text-gray-500">Error loading dashboard.</div>;
 
   const isAdmin = user?.role === 'ROLE_ADMIN';
 
   return (
     <div className="space-y-8">
       {/* Welcome Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <motion.div 
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-blue-600/10 via-indigo-600/5 to-purple-600/10 border border-blue-500/20 shadow-xs backdrop-blur-xs"
+      >
         <div>
-          <h1 className="text-3xl font-extrabold dark:text-white tracking-tight flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-black tracking-wider uppercase inline-flex items-center gap-1">
+              <Zap className="w-3 h-3 fill-current" /> Daily Prep
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
             <span>Welcome back, {data.userName.split(' ')[0]}!</span>
-            <span className="text-2xl">👋</span>
+            <span className="text-2xl inline-block animate-bounce">👋</span>
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 text-sm">
+          <p className="text-gray-600 dark:text-gray-400 mt-1 text-xs sm:text-sm max-w-xl">
             Track your DSA challenge progress, maintain consistency, and elevate your coding skills.
           </p>
         </div>
 
         {/* Total XP Highlight Card */}
-        <div className="flex items-center gap-3 bg-gradient-to-r from-amber-500/10 via-yellow-500/10 to-amber-500/5 px-4 py-2 rounded-2xl border border-amber-500/20 shadow-xs">
-          <div className="p-2 rounded-xl bg-amber-500 text-slate-950 shadow-sm">
+        <motion.div 
+          whileHover={{ scale: 1.04 }}
+          className="flex items-center gap-3.5 bg-gradient-to-r from-amber-500/15 via-yellow-500/10 to-amber-500/5 px-5 py-3 rounded-2xl border border-amber-500/30 shadow-xs"
+        >
+          <div className="p-2.5 rounded-xl bg-amber-500 text-slate-950 shadow-md shadow-amber-500/30">
             <Star className="w-5 h-5 fill-current" />
           </div>
           <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Total XP</div>
-            <div className="text-xl font-black text-gray-900 dark:text-white">{data.totalXp} XP</div>
+            <div className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-wider">Total XP</div>
+            <div className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white">
+              <AnimatedNumber value={data.totalXp} suffix=" XP" />
+            </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* ADMIN-ONLY ME SECTION: DAILY PREP HUB */}
       {isAdmin && (
@@ -178,13 +195,16 @@ const DashboardPage: React.FC = () => {
 
             <div className="divide-y divide-gray-100 dark:divide-slate-700/50">
               {filteredTasks.length > 0 ? (
-                filteredTasks.map((task) => (
-                  <div
+                filteredTasks.map((task, idx) => (
+                  <motion.div
                     key={task.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, delay: idx * 0.04 }}
                     className={`p-4 sm:p-5 transition-all flex items-center justify-between gap-4 ${
                       task.completed
                         ? 'bg-emerald-500/5 dark:bg-emerald-950/10'
-                        : 'hover:bg-gray-50/80 dark:hover:bg-slate-800/40'
+                        : 'hover:bg-blue-50/40 dark:hover:bg-slate-800/50'
                     }`}
                   >
                     <div className="flex-1 min-w-0">
@@ -193,7 +213,7 @@ const DashboardPage: React.FC = () => {
                           href={toSafeUrl(task.platformLink)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 truncate text-base"
+                          className="font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 truncate text-base transition-colors"
                         >
                           <span className={task.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
                             {task.title}
@@ -211,16 +231,18 @@ const DashboardPage: React.FC = () => {
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant={task.difficulty.toLowerCase() as any}>{task.difficulty}</Badge>
                         <Badge color={task.topicColor}>{task.topicName}</Badge>
-                        <span className="text-xs font-semibold text-amber-500 flex items-center gap-1">
+                        <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
                           <Star className="w-3.5 h-3.5 fill-current" /> {task.xpReward} XP
                         </span>
                       </div>
                     </div>
 
                     {/* Prominent Task Action Button (Completed or Mark Solved) */}
-                    <button
+                    <motion.button
+                      whileHover={{ scale: 1.04 }}
+                      whileTap={{ scale: 0.94 }}
                       onClick={() => handleTaskClick(task)}
-                      className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 flex-shrink-0 transition-all shadow-sm active:scale-95 ${
+                      className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 flex-shrink-0 transition-all shadow-xs ${
                         task.completed
                           ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/25 ring-2 ring-emerald-500/20'
                           : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400'
@@ -238,8 +260,8 @@ const DashboardPage: React.FC = () => {
                           <span>Mark Solved</span>
                         </>
                       )}
-                    </button>
-                  </div>
+                    </motion.button>
+                  </motion.div>
                 ))
               ) : (
                 <div className="p-8 text-center text-gray-400 text-xs">
@@ -258,42 +280,50 @@ const DashboardPage: React.FC = () => {
       {/* STATS & COMMUNITY SECTION */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Solved Problems Progress */}
-        <Card className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-800/80 border-0 shadow-lg shadow-gray-200/50 dark:shadow-none relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
-          <h3 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
-            <Target className="w-4 h-4 text-emerald-500" />
-            <span>Problem Solving Progress</span>
-          </h3>
-          <ProgressRing 
-            completed={data.tasksCompleted} 
-            total={data.totalTasks} 
-            size={120} 
-            strokeWidth={12} 
-          />
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
-            {data.tasksCompleted} of {data.totalTasks} challenges completed ({data.completionPercentage}%)
-          </p>
-        </Card>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-white to-gray-50 dark:from-slate-800 dark:to-slate-800/80 border border-gray-100 dark:border-slate-700/60 shadow-lg shadow-gray-200/50 dark:shadow-none relative overflow-hidden h-full">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10" />
+            <h3 className="text-base font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+              <Target className="w-4 h-4 text-emerald-500" />
+              <span>Problem Solving Progress</span>
+            </h3>
+            <ProgressRing 
+              completed={data.tasksCompleted} 
+              total={data.totalTasks} 
+              size={120} 
+              strokeWidth={12} 
+            />
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-4 text-center">
+              <span className="font-bold text-gray-800 dark:text-gray-200">
+                <AnimatedNumber value={data.tasksCompleted} />
+              </span> of {data.totalTasks} challenges completed ({data.completionPercentage}%)
+            </p>
+          </Card>
+        </motion.div>
 
         {/* Total XP & Ranking Card */}
-        <Card className="flex flex-col justify-center p-6 bg-gradient-to-br from-indigo-500 to-purple-600 border-0 text-white relative overflow-hidden shadow-lg shadow-indigo-500/30">
-          <div className="absolute top-0 right-0 p-4 opacity-20">
-            <Star className="w-24 h-24" />
-          </div>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 text-indigo-100 text-sm font-semibold mb-1">
-              <Trophy className="w-4 h-4 text-amber-300" />
-              <span>Leaderboard Standing</span>
+        <motion.div whileHover={{ y: -4 }} transition={{ duration: 0.2 }}>
+          <Card className="flex flex-col justify-center p-6 bg-gradient-to-br from-indigo-600 via-purple-600 to-indigo-700 border-0 text-white relative overflow-hidden shadow-xl shadow-indigo-500/25 h-full">
+            <div className="absolute top-0 right-0 p-4 opacity-15">
+              <Star className="w-24 h-24" />
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-5xl font-black">{data.totalXp}</span>
-              <Star className="w-8 h-8 text-yellow-300 fill-yellow-300" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 text-indigo-100 text-xs font-black uppercase tracking-wider mb-1">
+                <Trophy className="w-4 h-4 text-amber-300" />
+                <span>Leaderboard Standing</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-5xl font-black">
+                  <AnimatedNumber value={data.totalXp} />
+                </span>
+                <Star className="w-8 h-8 text-yellow-300 fill-yellow-300 animate-pulse" />
+              </div>
+              <p className="mt-4 text-indigo-100 bg-white/20 inline-block px-3 py-1 rounded-full text-xs font-semibold backdrop-blur-xs">
+                Keep solving daily to climb the leaderboard!
+              </p>
             </div>
-            <p className="mt-4 text-indigo-100 bg-white/20 inline-block px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm">
-              Keep solving daily to climb the leaderboard!
-            </p>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
 
         {/* Sidebar Mini-Leaderboard */}
         <div>

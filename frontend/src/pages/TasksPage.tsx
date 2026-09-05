@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import Card from '../components/ui/Card';
 import Badge from '../components/ui/Badge';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
+import { motion } from 'framer-motion';
 import { Calendar, CheckCircle2, ChevronRight, Search, Plus } from 'lucide-react';
 
 const TasksPage: React.FC = () => {
@@ -116,7 +117,7 @@ const TasksPage: React.FC = () => {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredSheets.map((sheet) => {
+          {filteredSheets.map((sheet, idx) => {
             const totalTasks = sheet.tasks.length;
             const completedTasks = sheet.tasks.filter((t) => t.completed).length;
             const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
@@ -128,54 +129,65 @@ const TasksPage: React.FC = () => {
             const isActive = new Date(sheet.startDate) <= now && new Date(sheet.endDate) >= now;
 
             return (
-              <Card 
-                key={sheet.id} 
-                hover 
-                onClick={() => navigate(`/tasks/${sheet.id}`)}
-                className="flex flex-col h-full overflow-hidden border border-slate-200 dark:border-slate-700/80 shadow-sm hover:shadow-md transition-all"
+              <motion.div
+                key={sheet.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.05 }}
+                whileHover={{ y: -5 }}
+                className="h-full"
               >
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="flex justify-between items-start mb-3">
-                    <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-semibold">
-                      {sheet.sheetType}
-                    </Badge>
-                    {isActive && (
-                      <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Active Now
-                      </span>
-                    )}
-                  </div>
-                  
-                  <h3 className="text-xl font-bold dark:text-white mb-2 line-clamp-1">{sheet.title}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
-                    {sheet.description}
-                  </p>
-                  
-                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-5">
-                    <Calendar className="w-3.5 h-3.5" />
-                    {startDate} — {endDate}
-                  </div>
-                  
-                  <div className="mt-auto pt-3 border-t border-gray-100 dark:border-slate-800">
-                    <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span className="text-gray-700 dark:text-gray-300">Solved</span>
-                      <span className="text-emerald-600 dark:text-emerald-400">{completedTasks}/{totalTasks} ({progress}%)</span>
+                <Card 
+                  onClick={() => navigate(`/tasks/${sheet.id}`)}
+                  className="flex flex-col h-full overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:border-slate-700 transition-all cursor-pointer group"
+                >
+                  <div className="p-6 flex-1 flex flex-col">
+                    <div className="flex justify-between items-start mb-3">
+                      <Badge className="bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-bold">
+                        {sheet.sheetType}
+                      </Badge>
+                      {isActive && (
+                        <span className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 rounded-full border border-emerald-200/50 dark:border-emerald-800/40">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          Active Now
+                        </span>
+                      )}
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
-                        style={{ width: `${progress}%` }}
-                      ></div>
+                    
+                    <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 line-clamp-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                      {sheet.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-4 flex-1">
+                      {sheet.description}
+                    </p>
+                    
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-5">
+                      <Calendar className="w-3.5 h-3.5 text-blue-500" />
+                      <span>{startDate} — {endDate}</span>
+                    </div>
+                    
+                    <div className="mt-auto pt-3 border-t border-gray-100 dark:border-slate-800">
+                      <div className="flex justify-between text-xs font-bold mb-1.5">
+                        <span className="text-gray-700 dark:text-gray-300">Solved</span>
+                        <span className="text-emerald-600 dark:text-emerald-400 font-black">{completedTasks}/{totalTasks} ({progress}%)</span>
+                      </div>
+                      <div className="w-full bg-gray-200/70 dark:bg-slate-700/70 rounded-full h-2 overflow-hidden">
+                        <motion.div 
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.6, ease: 'easeOut' }}
+                          className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full" 
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="px-6 py-3 bg-gray-50 dark:bg-slate-850 border-t border-gray-100 dark:border-slate-800 flex justify-between items-center text-xs font-semibold text-blue-600 dark:text-blue-400 group">
-                  <span>Explore Problems</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </Card>
+                  
+                  <div className="px-6 py-3 bg-gray-50/70 dark:bg-slate-850/70 border-t border-gray-100 dark:border-slate-800 flex justify-between items-center text-xs font-bold text-blue-600 dark:text-blue-400">
+                    <span>Explore Problems</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Card>
+              </motion.div>
             );
           })}
         </div>

@@ -28,6 +28,10 @@ spring:
               - openid
               - profile
               - email
+  session:
+    store-type: jdbc
+    jdbc:
+      initialize-schema: always
 
 server:
   port: 8080
@@ -35,7 +39,9 @@ server:
   servlet:
     session:
       cookie:
+        max-age: 2592000
         same-site: lax
+        http-only: true
 
 app:
   cors:

@@ -7,6 +7,8 @@ import Card from '../components/ui/Card';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import CoinRewardOverlay from '../components/common/CoinRewardOverlay';
 import SolutionModal from '../components/tasks/SolutionModal';
+import AnimatedNumber from '../components/common/AnimatedNumber';
+import { motion } from 'framer-motion';
 import { useToast } from '../components/ui/Toast';
 import { ArrowLeft, Calendar, ExternalLink, Star, CheckCircle2, Circle, Search } from 'lucide-react';
 import { toSafeUrl } from '../lib/security';
@@ -120,16 +122,16 @@ const TaskSheetDetailPage: React.FC = () => {
           {/* Mini Stats Banner */}
           <div className="flex items-center gap-4 border-t md:border-t-0 md:border-l border-gray-200 dark:border-slate-700 pt-4 md:pt-0 md:pl-6 flex-shrink-0">
             <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {completedTasks}/{totalTasks}
+              <div className="text-2xl font-black text-gray-900 dark:text-white">
+                <AnimatedNumber value={completedTasks} />/{totalTasks}
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">Problems</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Problems</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-amber-500">
-                {earnedXp}/{totalXp}
+              <div className="text-2xl font-black text-amber-500">
+                <AnimatedNumber value={earnedXp} />/{totalXp}
               </div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">XP Earned</div>
+              <div className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">XP Earned</div>
             </div>
           </div>
         </div>
@@ -200,15 +202,18 @@ const TaskSheetDetailPage: React.FC = () => {
       </div>
 
       {/* Task List */}
-      <Card className="p-0 overflow-hidden divide-y divide-gray-100 dark:divide-slate-700/60 shadow-md">
+      <Card className="p-0 overflow-hidden divide-y divide-gray-100 dark:divide-slate-700/60 shadow-lg">
         {filteredTasks.length > 0 ? (
-          filteredTasks.map((task) => (
-            <div
+          filteredTasks.map((task, idx) => (
+            <motion.div
               key={task.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25, delay: idx * 0.035 }}
               className={`p-4 sm:p-5 transition-colors flex items-center justify-between gap-4 ${
                 task.completed
                   ? 'bg-emerald-500/5 dark:bg-emerald-950/10'
-                  : 'hover:bg-gray-50/80 dark:hover:bg-slate-800/40'
+                  : 'hover:bg-blue-50/40 dark:hover:bg-slate-800/50'
               }`}
             >
               <div className="flex-1 min-w-0">
@@ -217,7 +222,7 @@ const TaskSheetDetailPage: React.FC = () => {
                     href={toSafeUrl(task.platformLink)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 truncate text-base"
+                    className="font-bold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 truncate text-base transition-colors"
                   >
                     <span className={task.completed ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
                       {task.title}
@@ -235,19 +240,21 @@ const TaskSheetDetailPage: React.FC = () => {
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant={task.difficulty.toLowerCase() as any}>{task.difficulty}</Badge>
                   <Badge color={task.topicColor}>{task.topicName}</Badge>
-                  <span className="text-xs font-semibold text-amber-500 flex items-center gap-1">
+                  <span className="text-xs font-bold text-amber-500 flex items-center gap-1">
                     <Star className="w-3.5 h-3.5 fill-current" /> {task.xpReward} XP
                   </span>
                 </div>
               </div>
 
               {/* Status Action Button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.94 }}
                 onClick={() => handleTaskClick(task)}
-                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 flex-shrink-0 transition-all shadow-sm ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 flex-shrink-0 transition-all shadow-xs ${
                   task.completed
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20 active:scale-95'
-                    : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400 active:scale-95'
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20'
+                    : 'bg-white dark:bg-slate-800 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 border border-gray-200 dark:border-slate-700 hover:border-emerald-400 text-gray-700 dark:text-gray-200 hover:text-emerald-600 dark:hover:text-emerald-400'
                 }`}
               >
                 {task.completed ? (
@@ -261,8 +268,8 @@ const TaskSheetDetailPage: React.FC = () => {
                     <span>Mark Solved</span>
                   </>
                 )}
-              </button>
-            </div>
+              </motion.button>
+            </motion.div>
           ))
         ) : (
           <div className="p-12 text-center">
